@@ -16,10 +16,10 @@ const MowjowCrowdsale = artifacts.require('MowjowCrowdsale')
 const MowjowToken = artifacts.require('MowjowToken')
 
 contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
-  const cap = ether(2)
+  const cap = ether(5)
   const lessThanCap = ether(1)
   const rate = new BigNumber(20000)
-  const value = ether(0.0001)
+  const value = ether(0.000001)
 
   const expectedTokenAmount = rate.mul(value)
 
@@ -30,7 +30,11 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
 
   beforeEach(async function () {
     this.startTime = latestTime() + duration.weeks(1);
-    this.endTime = this.startTime + duration.weeks(1);
+    this.periodBonus35 = this.startTime + duration.days(15);
+    this.periodBonus20 = this.startTime + duration.days(30);
+    this.periodBonus5 = this.startTime + duration.days(40);
+    this.periodBonus0 = this.startTime + duration.days(50);
+    this.endTime = this.startTime + duration.weeks(8);
     this.afterEndTime = this.endTime + duration.seconds(1)
 
     this.mowjowCrowdsale = await MowjowCrowdsale.new(this.startTime, this.endTime, rate, wallet, cap)
@@ -57,6 +61,10 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
       owner.should.equal(this.mowjowCrowdsale.address)
     })
 
+    it('should reject payments when amount of investor is zero', async function () {
+      await this.mowjowCrowdsale.buyTokens(investor, { value: 0, from: purchaser }).should.be.rejectedWith(EVMThrow)
+    })
+
     it('should be ended only after end', async function () {
       let ended = await this.mowjowCrowdsale.hasEnded()
       ended.should.equal(false)
@@ -69,6 +77,16 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
       await this.mowjowCrowdsale.send(cap.minus(lessThanCap)).should.be.fulfilled
       await this.mowjowCrowdsale.send(lessThanCap).should.be.fulfilled
     })
+
+    it('should reject payments outside cap', async function () {
+      await this.mowjowCrowdsale.send(cap)
+      await this.mowjowCrowdsale.send(2).should.be.rejectedWith(EVMThrow)
+    })
+
+    it('should reject payments that exceed cap', async function () {
+      await this.mowjowCrowdsale.send(cap.plus(1)).should.be.rejectedWith(EVMThrow)
+    })
+
   })
 
   describe('ending', function () {
@@ -98,7 +116,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     })
   })
 
-  describe('accepting payments in different time', function () {
+  describe('accepting payments in different time of the crowdsale', function () {
 
     it('should reject payments before start', async function () {
       await this.mowjowCrowdsale.send(value).should.be.rejectedWith(EVMThrow)
@@ -110,17 +128,12 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
       await this.mowjowCrowdsale.send(value).should.be.fulfilled
       await this.mowjowCrowdsale.buyTokens(investor, { value: value, from: purchaser }).should.be.fulfilled
     })
-
-    it('should reject payments when amount of investor is zero', async function () {
-      await increaseTimeTo(this.startTime)
-      await this.mowjowCrowdsale.buyTokens(investor, { value: 0, from: purchaser }).should.be.rejectedWith(EVMThrow)
-    })
   })
 
   describe('high-level purchase', function () {
 
     beforeEach(async function () {
-      await increaseTimeTo(this.startTime)
+      await increaseTimeTo(this.periodBonus0)
     })
 
     it('should log purchase', async function () {
@@ -160,7 +173,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
   describe('low-level purchase', function () {
 
     beforeEach(async function () {
-      await increaseTimeTo(this.startTime)
+      await increaseTimeTo(this.periodBonus0)
     })
 
     it('should log purchase', async function () {
@@ -196,4 +209,42 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     })
 
   })
+
+  describe('bonus payments', function () {
+    it('should assign tokens and 50% bonus', async function () {
+      await increaseTimeTo(this.startTime)
+      await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
+      const balance = await this.token.balanceOf(investor)
+      balance.should.be.bignumber.equal(expectedTokenAmount * 1.5)
+    })
+
+    it('should assign tokens and 35% bonus', async function () {
+      await increaseTimeTo(this.periodBonus35)
+      await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
+      const balance = await this.token.balanceOf(investor)
+      balance.should.be.bignumber.equal(expectedTokenAmount * 1.35)
+    })
+
+    it('should assign tokens and 20% bonus', async function () {
+      await increaseTimeTo(this.periodBonus20)
+      await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
+      const balance = await this.token.balanceOf(investor)
+      balance.should.be.bignumber.equal(expectedTokenAmount * 1.2)
+    })
+
+    it('should assign tokens and 5% bonus', async function () {
+      await increaseTimeTo(this.periodBonus5)
+      await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
+      const balance = await this.token.balanceOf(investor)
+      balance.should.be.bignumber.equal(expectedTokenAmount * 1.05)
+    })
+
+    it('should assign tokens and 0% bonus', async function () {
+      await increaseTimeTo(this.periodBonus0)
+      await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
+      const balance = await this.token.balanceOf(investor)
+      balance.should.be.bignumber.equal(expectedTokenAmount)
+    })
+  })
+
 })
