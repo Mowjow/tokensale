@@ -13,7 +13,7 @@ const should = require('chai')
   .should()
 
 const MowjowCrowdsale = artifacts.require('MowjowCrowdsale')
-const MowjowToken = artifacts.require('MowjowToken')
+const MowjowToken = artifacts.require('MowjowToken') 
 
 contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
   const cap = ether(5)
@@ -37,9 +37,8 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     this.endTime = this.startTime + duration.weeks(8);
     this.afterEndTime = this.endTime + duration.seconds(1)
 
-    this.mowjowCrowdsale = await MowjowCrowdsale.new(this.startTime, this.endTime, rate, wallet, cap)
-    let tokenAddress = await this.mowjowCrowdsale.token();
-    this.token = MowjowToken.at(await this.mowjowCrowdsale.token())
+    this.mowjowCrowdsale = await MowjowCrowdsale.new(this.startTime, this.endTime, rate, wallet, cap) 
+    this.token = MowjowToken.at(await this.mowjowCrowdsale.token()) 
   })
 
   describe('creating a valid crowdsale', function () {
@@ -210,7 +209,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
 
   })
 
-  describe('bonus payments', function () {
+  describe('payments in different transhes', function () {
     it('should assign tokens and 50% bonus', async function () {
       await increaseTimeTo(this.startTime)
       await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
@@ -245,6 +244,6 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
       const balance = await this.token.balanceOf(investor)
       balance.should.be.bignumber.equal(expectedTokenAmount)
     })
-  })
+  }) 
 
 })

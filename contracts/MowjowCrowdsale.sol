@@ -3,55 +3,12 @@ pragma solidity ^0.4.11;
 import "zeppelin-solidity/contracts/token/MintableToken.sol";
 import "zeppelin-solidity/contracts/crowdsale/CappedCrowdsale.sol"; 
 import "./MowjowToken.sol";
+import "./TrancheStrategy.sol";
 
-
-contract MowjowCrowdsale is CappedCrowdsale { 
+contract MowjowCrowdsale is CappedCrowdsale, TrancheStrategy { 
 
     // The token being sold
-    MowjowToken public token;
-    uint256 public maxCountTokensForSaleInPeriod = 4 * 1e8;
-
-    /**
-    * Define bonus schedule of transhes.
-    */
-    struct BonusStrategy {
-
-        //number of days after start the crowdsale 
-        uint daysAfterStart;
-
-        //rate of bonus for current of transhe
-        uint bonus;
-    }
-
-    /*
-    * State mashine
-    *   - Unknown:          Default Initial State of Contract
-    *   - Preparing:        All contract initialization calls
-    *   - PreSale:          We are into PreSale period
-    *   - ICO:              The real Sale of Tokens, after pre sale
-    *   - Success:          Minimum funding goal reached
-    *   - Failure:          Minimum funding goal not reached
-    *   - PresaleFinalized: The PreSale has been concluded
-    *   - ICOFinalized:     The ICO has finished
-    */
-
-    enum State {
-        Unknown,
-        Preparing,
-        PreSaleBonus50,
-        PreSaleBonus35,
-        Success,
-        Failure,
-        PresaleFinalized,
-        ICOFinalized
-    }
-    
-    // Store BonusStrategy in a fixed array, so that it can be seen in a blockchain explorer
-    BonusStrategy[5] public transhes; 
-    
-    uint trancheIndex;
-    mapping (uint => uint256) public tokenSoldInPeriod;
-    State private crowdSaleState;
+    MowjowToken public token;    
 
     /**
     * event for token purchase logging
@@ -81,7 +38,7 @@ contract MowjowCrowdsale is CappedCrowdsale {
     function buyTokens(address beneficiary) public payable {
         require(beneficiary != 0x0);
         require(validPurchase()); 
-        uint256 bonusRate = countBonus();  
+        uint256 bonusRate = countBonus(startTime);  
         uint256 weiAmount = msg.value; 
 
         // calculate token amount without bonus
@@ -93,13 +50,15 @@ contract MowjowCrowdsale is CappedCrowdsale {
         // update state
         weiRaised = weiRaised.add(weiAmount);
 
+        
         // total tokens amount to be created
-        tokens += bonus;
+        uint256 tokensAndBonus = tokens + bonus;
 
-        token.mint(beneficiary, tokens);
-        tokenSoldInPeriod[uint(crowdSaleState)] += tokens;
-        MowjowTokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
-
+        token.mint(beneficiary, tokensAndBonus);
+        uint currentPeriod = defineTranchePeriod(startTime);
+        
+        MowjowTokenPurchase(msg.sender, beneficiary, weiAmount, tokensAndBonus);
+        tokensForSale -= tokens;
         forwardFunds();
     }
 
@@ -110,52 +69,19 @@ contract MowjowCrowdsale is CappedCrowdsale {
         bool capReached = weiRaised >= cap;
         return super.hasEnded() || capReached || noOverCap;
     }
-
+    
     /**
     * @dev Check the sale period is still and investor's amount no zero
     * @return true if the transaction can buy tokens
     */ 
     function validPurchase() internal constant returns (bool) { 
         bool nonZeroPurchase = msg.value != 0;
-        bool noOverSold = isNoOverSold(msg.value); 
-        bool noEnded = hasEnded();
+        uint currentPeriod = defineTranchePeriod(startTime);
+        uint tokenSold = getTokensSoldInTranche(startTime);
+        bool noOverSold = isNoOverSoldInCurrentTranche(msg.value, tokenSold); 
+        bool noEnded = hasEnded(); 
         return nonZeroPurchase && !noEnded && noOverSold;
-    }
-
-
-    function isNoOverSold(uint value) internal constant returns (bool) {
-        if ((tokenSoldInPeriod[uint(crowdSaleState)] + value) > maxCountTokensForSaleInPeriod) { 
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /*
-    * @dev Fetch the rate of bonus
-    * @return uint256 Return rate of bonus for an investor
-    */
-    function countBonus() internal constant returns (uint256 bonus) {        
-        for (var i = 0; i < transhes.length; i++) { 
-                if ((startTime + transhes[i].daysAfterStart) >= now) {
-                return transhes[i].bonus;            
-            }            
-        }
-    }    
-
-
-    function setTranshesData() internal constant {
-        fillTranshesData(0 days, 50, 0);         
-        fillTranshesData(15 days, 35, 1);
-        fillTranshesData(30 days, 20, 2); 
-        fillTranshesData(40 days, 5, 3); 
-        fillTranshesData(50 days, 0, 4);         
-    }  
-    
-    function fillTranshesData(uint daysAfterStart, uint bonus, uint index) internal constant { 
-        transhes[index].daysAfterStart = daysAfterStart;
-        transhes[index].bonus = bonus;
-    }  
+    }   
 
     /*
     * @dev Creates the token to be sold.
