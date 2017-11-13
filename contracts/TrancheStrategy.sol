@@ -28,13 +28,37 @@ contract  TrancheStrategy is  Ownable, PrisingStrategy {
     BonusSchedule[5] public transhes;
     uint countTranches = 0; 
 
+<<<<<<< Updated upstream
     function setTranshesData() public {
+=======
+    /*
+    * @dev Constructor
+    * @return uint256 Return rate of bonus for an investor
+    */
+    function TrancheStrategy() {
+        setTranchesData();
+    }
+
+    /*
+    * For testing purposes 
+    */
+    function setTranchesData() public {
+>>>>>>> Stashed changes
         setTranche(0 days, maxCountTokensForSaleInPeriod, 50);
         setTranche(15 days, maxCountTokensForSaleInPeriod, 35);
         setTranche(30 days, maxCountTokensForSaleInPeriod, 20);
         setTranche(40 days, maxCountTokensForSaleInPeriod, 5);
         setTranche(50 days, maxCountTokensForSaleInPeriod, 0);        
+<<<<<<< Updated upstream
     }  
+=======
+    }
+
+
+    function setStartTime(uint256 _startTime) public {
+        startTime = _startTime;
+    } 
+>>>>>>> Stashed changes
 
     /*
     * @dev Fetch the rate of bonus
@@ -45,7 +69,21 @@ contract  TrancheStrategy is  Ownable, PrisingStrategy {
             if ((startTime + transhes[i].daysAfterStart) >= now) {     
                 return transhes[i].bonus;            
             }            
+<<<<<<< Updated upstream
         }
+=======
+        }  
+    } 
+
+    /*
+    * @dev Count free tokens for sale in a tranche
+    * @return  
+    */
+    function countMaxSoldToken() public returns (uint256) {        
+        uint indexOfTranche = defineTranchePeriod();
+        maxCountTokensForSaleInPeriod = maxCountTokensForSaleInPeriod - tokenSoldInPeriod[indexOfTranche];
+        return maxCountTokensForSaleInPeriod;
+>>>>>>> Stashed changes
     } 
   
     /**
@@ -57,17 +95,36 @@ contract  TrancheStrategy is  Ownable, PrisingStrategy {
         return tokenTotal > maxCountTokensForSaleInPeriod;
     }
 
+<<<<<<< Updated upstream
     function getTokensSoldInTranche(uint timeStartIco) public returns (uint256 tokens) {
         uint indexOfTranche = defineTranchePeriod(timeStartIco);
+=======
+    /**
+    * @dev Check  
+    * @return true if the transaction can buy tokens
+    */ 
+    function getTokensSoldInTranche() public returns (uint256 tokens) {
+        uint indexOfTranche = defineTranchePeriod();
+>>>>>>> Stashed changes
         tokens = tokenSoldInPeriod[indexOfTranche];
         return tokens;
     }
 
+<<<<<<< Updated upstream
     function addTokensSoldInTranche(uint timeStartIco, uint256 soldTokens) public {
         uint indexOfTranche = defineTranchePeriod(timeStartIco);
+=======
+    /**
+    * @dev Check  
+    * @return true if the transaction can buy tokens
+    */ 
+    function addTokensSoldInTranche(uint256 soldTokens, uint256 soldBonusTokens, uint256 bonusRate) public {
+        uint indexOfTranche = defineTranchePeriod();
+>>>>>>> Stashed changes
         tokenSoldInPeriod[indexOfTranche] += soldTokens;
     }
 
+<<<<<<< Updated upstream
     function fillTranshesData(BonusSchedule newTranche) internal constant { 
         transhes[countTranches] = newTranche;
         countTranches++;
@@ -79,10 +136,21 @@ contract  TrancheStrategy is  Ownable, PrisingStrategy {
             if ((timeStartIco + transhes[i].daysAfterStart) >= now) {
                // currentTranchePeriod = transhes[i].period;           
                 return i;
+=======
+    /**
+    * @dev Check  
+    * @return true if the transaction can buy tokens
+    */ 
+    function defineTranchePeriod() internal constant returns (uint256 indexOfTranche) {
+        for (uint i = 0; i < tranches.length; i++) {
+            if ((startTime + tranches[i].daysAfterStart) >= now) {
+                return tranches[i].bonus;  
+>>>>>>> Stashed changes
             }            
         }
     }
 
+<<<<<<< Updated upstream
     function setTranche(uint _daysOfTranche, uint256 _tokenForTranchePeriod, uint256 _bonusForTranchePeriod) public onlyOwner {  
         transhes[countTranches] = BonusSchedule({daysAfterStart: _daysOfTranche, bonus: _bonusForTranchePeriod, valueForTranche: _tokenForTranchePeriod});
         countTranches++;       
@@ -92,6 +160,23 @@ contract  TrancheStrategy is  Ownable, PrisingStrategy {
     }
 
     function isTrancheSet(uint startTime) internal constant returns (bool) {  
+=======
+    /**
+    * @dev set parameters of a tranche 
+    * @return true if succeful tranche
+    */ 
+    function setTranche(uint _daysOfTranche, uint256 _tokenForTranchePeriod, uint256 _bonusForTranchePeriod) public returns (bool) {
+        tranches.push(BonusSchedule({daysAfterStart: _daysOfTranche, bonus: _bonusForTranchePeriod, valueForTranche: _tokenForTranchePeriod})); 
+        trancheSet(_daysOfTranche, _tokenForTranchePeriod, _bonusForTranchePeriod);
+        return true;
+    }
+
+    /**
+    * @dev Check working tranche
+    * @return true if is free tokens for sale
+    */ 
+    function isTrancheSet() internal constant returns (bool) {  
+>>>>>>> Stashed changes
         bool tranche = (daysOfTranches + startTime) > now;
         bool tokensFree = tokensForSale > 0;
         return tranche && tokensFree;

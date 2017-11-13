@@ -244,6 +244,36 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
       const balance = await this.token.balanceOf(investor)
       balance.should.be.bignumber.equal(expectedTokenAmount)
     })
+<<<<<<< Updated upstream
   }) 
 
+=======
+  })
+
+  describe('creating a valid TrancheStrategy constructor', function () {
+
+    it('should valid new instance', async function () {
+      await TrancheStrategy.new().should.be.fulfilled;
+    })
+
+    it('should valid new instance', async function () {
+      let tokens = await this.trancheStrategy.maxCountTokensForSaleInPeriod()
+      tokens.should.be.bignumber.equal(4e8);
+    })
+  })
+
+  describe('accepting max payments in different the tranches', function () {
+
+    beforeEach(async function () {
+      await increaseTimeTo(this.startTime)
+    })
+
+    it('should assign tokens and 50% bonus', async function () {
+      await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
+      const balance = await this.token.balanceOf(investor)
+      balance.should.be.bignumber.equal(expectedTokenAmount * 1.5)
+      let tokens = await this.trancheStrategy.isNoOverSoldInCurrentTranche(value)
+    })
+  })
+>>>>>>> Stashed changes
 })
