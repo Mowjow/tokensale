@@ -1,12 +1,7 @@
-pragma solidity ^0.4.11;
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+pragma solidity ^0.4.11; 
 
-
-contract PrisingStrategy is Ownable {
-    uint256 bonusRate;
-    uint256 tokensForSale;
-    uint daysOfTranches;
-
-    function setTranche(uint daysOfTranche, uint256 tokenForTranchePeriod, uint256 bonusForTranchePeriod);
-    function isTrancheSet() returns (bool);
+contract PrisingStrategy {
+    function setTranche(uint daysOfTranche, uint256 tokenForTranchePeriod, uint256 bonusForTranchePeriod) returns (bool);
+    function isTrancheSet() internal constant returns (bool);
+    function countBonus() public returns (uint256 bonus);
 }
