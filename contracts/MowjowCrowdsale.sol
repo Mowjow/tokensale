@@ -2,13 +2,16 @@ pragma solidity ^0.4.11;
 
 import "zeppelin-solidity/contracts/token/MintableToken.sol";
 import "zeppelin-solidity/contracts/crowdsale/CappedCrowdsale.sol"; 
+import "zeppelin-solidity/contracts/crowdsale/FinalizableCrowdsale.sol";
 import "./MowjowToken.sol";
+//import "./FinalizableMowjowCrowdsale.sol";
 import "./TrancheStrategy.sol";
 
 contract MowjowCrowdsale is CappedCrowdsale {  
 
     // The token being sold
     MowjowToken public token;    
+    //FinalizableMowjowCrowdsale public finalizableMowjowCrowdsale;
 
     /**
     * event for token purchase logging
@@ -30,8 +33,9 @@ contract MowjowCrowdsale is CappedCrowdsale {
     */
     function MowjowCrowdsale(uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap, TrancheStrategy _trancheStrategy)
     CappedCrowdsale(_cap) Crowdsale(_startTime, _endTime, _rate, _wallet) {
+        //finalizableMowjowCrowdsale = _finalizableMowjowCrowdsale;
         trancheStrategy = _trancheStrategy;
-        trancheStrategy.setStartTime(_startTime);
+        trancheStrategy.setParams(_startTime, _rate);
     }
 
     /*
@@ -39,51 +43,48 @@ contract MowjowCrowdsale is CappedCrowdsale {
     */ 
     function buyTokens(address beneficiary) public payable {
         require(beneficiary != 0x0);
-        require(validPurchase()); 
-        uint256 bonusRate = trancheStrategy.countBonus();  
-        uint256 weiAmount = msg.value; 
-
-        // calculate token amount without bonus
-        uint256 tokens = weiAmount.mul(rate);
-
-        // calculate bonus 
-        uint256 bonusToken = tokens.mul(bonusRate).div(100);
-
+        require(validPurchase());  
+        uint256 weiAmount = msg.value;  
         // update state
-        weiRaised = weiRaised.add(weiAmount);
-
-        
-        // total tokens amount to be created
-        uint256 tokensAndBonus = tokens + bonusToken;
-
-        token.mint(beneficiary, tokensAndBonus);
-       // uint currentPeriod = trancheStrategy.defineTranchePeriod(startTime);
+        weiRaised = weiRaised.add(weiAmount); 
+        uint256 tokensAndBonus = trancheStrategy.countTokens(msg.value);
+        token.mint(beneficiary, tokensAndBonus); 
         
         MowjowTokenPurchase(msg.sender, beneficiary, weiAmount, tokensAndBonus);
-        trancheStrategy.addTokensSoldInTranche(tokens, bonusToken, bonusRate);
+        trancheStrategy.addTokensSoldInTranche(tokensAndBonus);
         forwardFunds();
     }
 
     // overriding Crowdsale#hasEnded to add cap logic
     // @return true if crowdsale event has ended
     function hasEnded() public constant returns (bool) {
-        bool noOverCap = msg.value > cap;
+        bool noOverCap = msg.value > cap; 
         bool capReached = weiRaised >= cap;
+        //return true;
         return super.hasEnded() || capReached || noOverCap;
     }
+
+    /**
+    * @dev Check the sale period is still and investor's amount no zero
+    * @return true if the transaction can buy tokens
+    */ 
+    // function finalizeMowjowCrowdsale() public  returns (bool) { 
+    //     finalizableMowjowCrowdsale.finalize();  
+    // }
     
     /**
     * @dev Check the sale period is still and investor's amount no zero
     * @return true if the transaction can buy tokens
     */ 
     function validPurchase() internal constant returns (bool) { 
-        bool nonZeroPurchase = msg.value != 0;
-        //uint currentPeriod = trancheStrategy.defineTranchePeriod(startTime);
-        uint tokenSold = trancheStrategy.getTokensSoldInTranche();
-        bool noOverSold = trancheStrategy.isNoOverSoldInCurrentTranche(msg.value); 
-        bool noEnded = hasEnded(); 
-        return nonZeroPurchase && !noEnded && noOverSold;
+        require(msg.value != 0);
+        uint256 requireTokens = msg.value.mul(rate); 
+        require(trancheStrategy.getFreeTokensInTranche(requireTokens)); 
+        require(!hasEnded()); 
+        return true; 
     }   
+
+    
 
     /*
     * @dev Creates the token to be sold.

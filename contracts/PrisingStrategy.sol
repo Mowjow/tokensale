@@ -1,7 +1,9 @@
 pragma solidity ^0.4.11; 
 
+
 contract PrisingStrategy {
-    function setTranche(uint daysOfTranche, uint256 tokenForTranchePeriod, uint256 bonusForTranchePeriod) returns (bool);
+    function setTranche(uint[] _daysOfTranches, uint256[] _bonuses, uint[] _valueForTranches) public returns(bool);
+    function countTokens(uint256 _value) public returns (uint256 tokensAndBonus);
     function isTrancheSet() internal constant returns (bool);
-    function countBonus() public returns (uint256 bonus);
+   
 }

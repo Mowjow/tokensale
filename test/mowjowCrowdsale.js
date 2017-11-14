@@ -38,7 +38,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     this.endTime = this.startTime + duration.weeks(8);
     this.afterEndTime = this.endTime + duration.seconds(1)
 
-    this.trancheStrategy = await TrancheStrategy.new(this.startTime)
+    this.trancheStrategy = await TrancheStrategy.deployed()
     this.mowjowCrowdsale = await MowjowCrowdsale.new(this.startTime, this.endTime, rate, wallet, cap, this.trancheStrategy.address)
     let tokenAddress = await this.mowjowCrowdsale.token();
     this.token = MowjowToken.at(await this.mowjowCrowdsale.token())
@@ -121,8 +121,9 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
   describe('accepting payments in different time of the crowdsale', function () {
 
     it('should reject payments before start', async function () {
-      //await this.mowjowCrowdsale.send(value).should.be.rejectedWith(EVMThrow)
-      //await this.mowjowCrowdsale.buyTokens(investor, { from: purchaser, value: value }).should.be.rejectedWith(EVMThrow)
+      await increaseTimeTo(this.startTime - duration.days(1))
+      await this.mowjowCrowdsale.send(value).should.be.rejectedWith(EVMThrow)
+      await this.mowjowCrowdsale.buyTokens(investor, { from: purchaser, value: value }).should.be.rejectedWith(EVMThrow)
     })
 
     it('should accept payments after start', async function () {
@@ -135,10 +136,11 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
   describe('high-level purchase', function () {
 
     beforeEach(async function () {
-      await increaseTimeTo(this.periodBonus0)
+      //await increaseTimeTo(this.periodBonus0)
     })
 
     it('should log purchase', async function () {
+      await increaseTimeTo(this.periodBonus0)
       const { logs } = await this.mowjowCrowdsale.sendTransaction({ value: value, from: investor })
 
       const event = logs.find(e => e.event === 'MowjowTokenPurchase')
@@ -151,6 +153,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     })
 
     it('should increase totalSupply', async function () {
+      await increaseTimeTo(this.periodBonus0)
       let initBalance = await this.token.totalSupply();
       await this.mowjowCrowdsale.send(value)
       const totalSupply = await this.token.totalSupply()
@@ -158,12 +161,14 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     })
 
     it('should assign tokens to sender', async function () {
+      await increaseTimeTo(this.periodBonus0)
       await this.mowjowCrowdsale.sendTransaction({ value: value, from: investor })
       let balance = await this.token.balanceOf(investor);
       balance.should.be.bignumber.equal(expectedTokenAmount)
     })
 
     it('should forward funds to wallet', async function () {
+      await increaseTimeTo(this.periodBonus0)
       const pre = web3.eth.getBalance(wallet)
       await this.mowjowCrowdsale.sendTransaction({ value, from: investor })
       const post = web3.eth.getBalance(wallet)
@@ -213,8 +218,10 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
   })
 
   describe('payments in different transhes', function () {
-    it('should assign tokens and 50% bonus', async function () {
+    beforeEach(async function () {
       await increaseTimeTo(this.startTime)
+    })
+    it('should assign tokens and 50% bonus', async function () {
       await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
       const balance = await this.token.balanceOf(investor)
       balance.should.be.bignumber.equal(expectedTokenAmount * 1.5)
@@ -254,24 +261,12 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     it('should valid new instance', async function () {
       await TrancheStrategy.new().should.be.fulfilled;
     })
-
-    it('should valid new instance', async function () {
-      let tokens = await this.trancheStrategy.maxCountTokensForSaleInPeriod()
-      tokens.should.be.bignumber.equal(4e8);
-    })
   })
 
   describe('accepting max payments in different the tranches', function () {
 
     beforeEach(async function () {
       await increaseTimeTo(this.startTime)
-    })
-
-    it('should assign tokens and 50% bonus', async function () {
-      await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
-      const balance = await this.token.balanceOf(investor)
-      balance.should.be.bignumber.equal(expectedTokenAmount * 1.5)
-      let tokens = await this.trancheStrategy.isNoOverSoldInCurrentTranche(value)
     })
   })
 })

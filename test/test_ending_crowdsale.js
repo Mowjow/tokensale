@@ -41,25 +41,33 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
         this.trancheStrategy = await TrancheStrategy.deployed()
         this.mowjowCrowdsale = await MowjowCrowdsale.new(this.startTime, this.endTime, rate, wallet, cap, this.trancheStrategy.address)
         let tokenAddress = await this.mowjowCrowdsale.token();
-        this.token = MowjowToken.at(await this.mowjowCrowdsale.token())        
+        this.token = MowjowToken.at(await this.mowjowCrowdsale.token())
     })
 
-    describe('creating a valid TrancheStrategy constructor', function () {
+    describe('ending', function () {
 
-        it('should valid new instance', async function () {
-            await TrancheStrategy.new().should.be.fulfilled;
+        beforeEach(async function () {
+            await increaseTimeTo(this.startTime)
         })
 
+        it('should not be ended if under cap', async function () {
+            let hasEnded = await this.mowjowCrowdsale.hasEnded()
+            hasEnded.should.equal(false)
+            await this.mowjowCrowdsale.send(lessThanCap)
+            hasEnded = await this.mowjowCrowdsale.hasEnded()
+            hasEnded.should.equal(false)
+        })
 
-        it('should valid counting tokens', async function () {
-            const { logs } =  await this.trancheStrategy.countTokens(33)  
-            const event = logs.find(e => e.event === 'TokenForInvestor')
-            should.exist(event)
-            event.args._token.should.be.bignumber.equal(0)  
-            event.args._tokenAndBonus.should.be.bignumber.equal(0)
-            event.args.indexOfperiod.should.be.bignumber.equal(0)
-            event.args.bonus.should.be.bignumber.equal(55)
-            event.args.currentTime.should.be.bignumber.equal(55)
-        }) 
-    }) 
+        it('should not be ended if just under cap', async function () {
+            await this.mowjowCrowdsale.send(cap.minus(1))
+            let hasEnded = await this.mowjowCrowdsale.hasEnded()
+            hasEnded.should.equal(false)
+        })
+
+        it('should be ended if cap reached', async function () {
+            await this.mowjowCrowdsale.send(cap)
+            let hasEnded = await this.mowjowCrowdsale.hasEnded()
+            hasEnded.should.equal(true)
+        })
+    })
 })
