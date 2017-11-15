@@ -24,15 +24,11 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
 
         //Value of tokens avalible the current period
         uint valueForTranche;
-    } 
+    }  
 
-    //BonusSchedule[] memory tranches;
-    /*
-    * For testing purposes 
-    */
-    uint256 public maxCountTokensForSaleInPeriod = 4 * 1e8;
-
+    //events for testing
     event trancheSet(uint _daysOfTranche, uint256 _tokenForTranchePeriod, uint256 _bonusForTranchePeriod);
+    event AvalibleTokens(uint256 freeTokens, uint256 requireTokens, bool hasTokensForSale);
     event TokenForInvestor(uint256 _token, uint256 _tokenAndBonus, uint256 indexOfperiod, uint256 bonus, uint256 currentTime);
     event tokensSoldInTranche(uint256 _tokenForTranchePeriod, uint256 _tokenBonusForTranchePeriod, uint256 _bonusForTranchePeriod);
 
@@ -85,14 +81,32 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
     * @return true if the transaction can buy tokens
     */ 
     function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool) {
+        bool hasTokens = false;
         uint indexOfTranche = defineTranchePeriod();
-        require(tranches[indexOfTranche].valueForTranche > requiredTokens);
-        return true;
+        if (tranches[indexOfTranche].valueForTranche < requiredTokens) {
+            //require(tranches[indexOfTranche].valueForTranche > requiredTokens);
+            hasTokens = true;
+            AvalibleTokens(tranches[indexOfTranche].valueForTranche, requiredTokens, hasTokens);
+            //return hasTokens;
+        } else {
+            hasTokens = false;
+        }       
+        return hasTokens;
     }
 
     /**
-    * @dev Check  
-    * @return true if the transaction can buy tokens
+    * @dev set parameters of a tranche 
+    * @return uint256 sum 
+    */ 
+    function countRemainingTokens() public returns (uint256 remainingTokens) {
+        for (uint i = 0; i < tranches.length; i++) {
+            remainingTokens += tranches[i].valueForTranche;
+        }
+        return remainingTokens;
+    }
+
+    /**
+    * @dev summing sold of tokens  
     */ 
     function addTokensSoldInTranche(uint256 tokensAndBonus) public {
         totalSaleTokens += tokensAndBonus;
@@ -100,7 +114,7 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
 
     /**
     * @dev set parameters of a tranche 
-    * @return true if succeful tranche
+    * @return true if succeful setting a tranche
     */ 
     function setTranche(uint[] _daysOfTranches, uint256[] _bonuses, uint[] _valueForTranches) public returns(bool) {
         if (_daysOfTranches.length == _bonuses.length && _bonuses.length == _valueForTranches.length) {
@@ -116,8 +130,8 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
     } 
 
     /**
-    * @dev Check  
-    * @return true if the transaction can buy tokens
+    * @dev get index of tranche  
+    * @return uint256 number of current tranche in array tranches
     */ 
     function defineTranchePeriod() internal constant returns (uint256 indexOfTranche) {
         for (uint i = 0; i < tranches.length; i++) {

@@ -1,5 +1,5 @@
-var FinalizableMowjowCrowdsale = artifacts.require("./FinalizableMowjowCrowdsale.sol");
+var FinalizableMowjow = artifacts.require("./FinalizableMowjow.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(FinalizableMowjowCrowdsale);
+  deployer.deploy(FinalizableMowjow);
 };

@@ -3,15 +3,19 @@ pragma solidity ^0.4.11;
 import "zeppelin-solidity/contracts/token/MintableToken.sol";
 import "zeppelin-solidity/contracts/crowdsale/CappedCrowdsale.sol"; 
 import "zeppelin-solidity/contracts/crowdsale/FinalizableCrowdsale.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol"; 
+import "zeppelin-solidity/contracts/math/SafeMath.sol"; 
 import "./MowjowToken.sol";
-//import "./FinalizableMowjowCrowdsale.sol";
 import "./TrancheStrategy.sol";
+import "./FinalizableMowjow.sol";
 
-contract MowjowCrowdsale is CappedCrowdsale {  
+contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
+
+    using SafeMath for uint256;
 
     // The token being sold
-    MowjowToken public token;    
-    //FinalizableMowjowCrowdsale public finalizableMowjowCrowdsale;
+    MowjowToken mowjowToken;    
+    FinalizableMowjow public finalizableMowjow;
 
     /**
     * event for token purchase logging
@@ -31,9 +35,11 @@ contract MowjowCrowdsale is CappedCrowdsale {
     * @param _wallet    address     Specifies address where funds are collected
     * @param _cap       uint256     Specifies total count of tokens
     */
-    function MowjowCrowdsale(uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap, TrancheStrategy _trancheStrategy)
-    CappedCrowdsale(_cap) Crowdsale(_startTime, _endTime, _rate, _wallet) {
-        //finalizableMowjowCrowdsale = _finalizableMowjowCrowdsale;
+    function MowjowCrowdsale(
+        uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap, 
+        TrancheStrategy _trancheStrategy, FinalizableMowjow _finalizableMowjow
+    ) CappedCrowdsale(_cap) Crowdsale(_startTime, _endTime, _rate, _wallet) {
+        finalizableMowjow = _finalizableMowjow;
         trancheStrategy = _trancheStrategy;
         trancheStrategy.setParams(_startTime, _rate);
     }
@@ -48,7 +54,10 @@ contract MowjowCrowdsale is CappedCrowdsale {
         // update state
         weiRaised = weiRaised.add(weiAmount); 
         uint256 tokensAndBonus = trancheStrategy.countTokens(msg.value);
-        token.mint(beneficiary, tokensAndBonus); 
+        //require(mowjowToken.totalSupply() > tokensAndBonus);
+        //token.totalSupply.sub(tokensAndBonus);
+       // mowjowToken.balances[beneficiary] = tokensAndBonus;
+        mowjowToken.mint(beneficiary, tokensAndBonus); 
         
         MowjowTokenPurchase(msg.sender, beneficiary, weiAmount, tokensAndBonus);
         trancheStrategy.addTokensSoldInTranche(tokensAndBonus);
@@ -62,29 +71,20 @@ contract MowjowCrowdsale is CappedCrowdsale {
         bool capReached = weiRaised >= cap;
         //return true;
         return super.hasEnded() || capReached || noOverCap;
-    }
-
-    /**
-    * @dev Check the sale period is still and investor's amount no zero
-    * @return true if the transaction can buy tokens
-    */ 
-    // function finalizeMowjowCrowdsale() public  returns (bool) { 
-    //     finalizableMowjowCrowdsale.finalize();  
-    // }
+    } 
     
-    /**
+    /*
     * @dev Check the sale period is still and investor's amount no zero
     * @return true if the transaction can buy tokens
     */ 
     function validPurchase() internal constant returns (bool) { 
         require(msg.value != 0);
         uint256 requireTokens = msg.value.mul(rate); 
+        //trancheStrategy.getFreeTokensInTranche(requireTokens);
         require(trancheStrategy.getFreeTokensInTranche(requireTokens)); 
         require(!hasEnded()); 
         return true; 
-    }   
-
-    
+    }    
 
     /*
     * @dev Creates the token to be sold.
@@ -92,13 +92,24 @@ contract MowjowCrowdsale is CappedCrowdsale {
     * @return MintableToken 
     */
     function createTokenContract() internal returns (MintableToken) {
-        token = new MowjowToken();
-        return token;
+        mowjowToken = new MowjowToken();
+        return mowjowToken;
     }
 
     // send ether to the fund collection wallet
     // override to create custom fund forwarding mechanisms
     function forwardFunds() internal {
         wallet.transfer(msg.value);
-    } 
+    }
+
+    /**
+    * @dev The overriding function from zeppelin-solidity/contracts/crowdsale/FinalizableCrowdsale.sol 
+    * should call super.finalization() to ensure the chain of finalization is executed entirely.
+    * 
+    */
+    function finalization() internal { 
+        uint256 totalTranchesSaleTokens = trancheStrategy.totalSaleTokens();
+        uint256 remainingTokens = trancheStrategy.countRemainingTokens();
+        finalizableMowjow.doFinalization(totalTranchesSaleTokens, remainingTokens, weiRaised, mowjowToken);
+    }
 }

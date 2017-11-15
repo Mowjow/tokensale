@@ -15,7 +15,7 @@ const should = require('chai')
 const MowjowCrowdsale = artifacts.require('MowjowCrowdsale')
 const MowjowToken = artifacts.require('MowjowToken')
 const TrancheStrategy = artifacts.require('TrancheStrategy')
-const FinalizableMowjowCrowdsale = artifacts.require('FinalizableMowjowCrowdsale')
+const FinalizableMowjow = artifacts.require('FinalizableMowjow')
 
 contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     const cap = ether(5)
@@ -39,14 +39,11 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
         this.endTime = this.startTime + duration.weeks(8);
         this.afterEndTime = this.endTime + duration.seconds(1)
 
-        this.finalizableMowjowCrowdsale = await FinalizableMowjowCrowdsale.deployed()
+        this.finalizableMowjow = await FinalizableMowjow.deployed()
         this.trancheStrategy = await TrancheStrategy.deployed()
-        this.mowjowCrowdsale = await MowjowCrowdsale.new(this.startTime, this.endTime, rate, wallet, cap, this.trancheStrategy.address, this.finalizableMowjowCrowdsale.address)
+        this.mowjowCrowdsale = await MowjowCrowdsale.new(this.startTime, this.endTime, rate, wallet, cap, this.trancheStrategy.address, this.finalizableMowjow.address)
         let tokenAddress = await this.mowjowCrowdsale.token();
         this.token = MowjowToken.at(await this.mowjowCrowdsale.token())
-        console.log("this.finalizableMowjowCrowdsale", this.finalizableMowjowCrowdsale.address)
-        console.log("this.this.trancheStrategy", this.trancheStrategy.address)
-        console.log("this.mowjowCrowdsale ", this.mowjowCrowdsale.address)
     })
 
     describe('payments in different transhes', function () {
@@ -54,8 +51,8 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
             await increaseTimeTo(this.startTime)
         })
         it('should assign tokens and 50% bonus', async function () {
-            await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
-            const balance = await this.token.balanceOf(investor)
+            await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser }) 
+            const balance = await this.token.balanceOf(investor) 
             balance.should.be.bignumber.equal(expectedTokenAmount * 1.5)
         })
 
