@@ -19,7 +19,7 @@ const data = {
     MowjowCrowdsale: artifacts.require('MowjowCrowdsale'),
     MowjowToken: artifacts.require('MowjowToken'),
     TrancheStrategy: artifacts.require('TrancheStrategy'),
-    FinalizableMowjowCrowdsale: artifacts.require('FinalizableMowjowCrowdsale'),
+    FinalizableMowjowCrowdsale: artifacts.require('FinalizableMowjow'),
     cap: ether(5),
     lessThanCap: ether(1),
     rate: rate,

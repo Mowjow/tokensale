@@ -1,5 +1,6 @@
 var FinalizableMowjow = artifacts.require("./FinalizableMowjow.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(FinalizableMowjow);
+  const gasValue = { gas: 800000000 };
+  deployer.deploy(FinalizableMowjow, gasValue);
 };

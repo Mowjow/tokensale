@@ -11,11 +11,12 @@ import "./FinalizableMowjow.sol";
 
 contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
 
-    using SafeMath for uint256;
+    using SafeMath for uint256; 
 
     // The token being sold
     MowjowToken mowjowToken;    
     FinalizableMowjow public finalizableMowjow;
+    address walletTeam;
 
     /**
     * event for token purchase logging
@@ -53,10 +54,7 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
         uint256 weiAmount = msg.value;  
         // update state
         weiRaised = weiRaised.add(weiAmount); 
-        uint256 tokensAndBonus = trancheStrategy.countTokens(msg.value);
-        //require(mowjowToken.totalSupply() > tokensAndBonus);
-        //token.totalSupply.sub(tokensAndBonus);
-       // mowjowToken.balances[beneficiary] = tokensAndBonus;
+        uint256 tokensAndBonus = trancheStrategy.countTokens(msg.value); 
         mowjowToken.mint(beneficiary, tokensAndBonus); 
         
         MowjowTokenPurchase(msg.sender, beneficiary, weiAmount, tokensAndBonus);
@@ -68,8 +66,7 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
     // @return true if crowdsale event has ended
     function hasEnded() public constant returns (bool) {
         bool noOverCap = msg.value > cap; 
-        bool capReached = weiRaised >= cap;
-        //return true;
+        bool capReached = weiRaised >= cap; 
         return super.hasEnded() || capReached || noOverCap;
     } 
     
@@ -111,5 +108,9 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
         uint256 totalTranchesSaleTokens = trancheStrategy.totalSaleTokens();
         uint256 remainingTokens = trancheStrategy.countRemainingTokens();
         finalizableMowjow.doFinalization(totalTranchesSaleTokens, remainingTokens, weiRaised, mowjowToken);
+        uint256 startTimeDistribution =  now;
+        uint256 cliff =  startTimeDistribution.add(60 days);
+        uint256 vesting = startTimeDistribution.add(90 days);
+        mowjowToken.grantVestedTokens(walletTeam, remainingTokens, startTimeDistribution, cliff, vesting, false, false);
     }
 }
