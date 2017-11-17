@@ -86,11 +86,11 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
         if (tranches[indexOfTranche].valueForTranche < requiredTokens) {
             //require(tranches[indexOfTranche].valueForTranche > requiredTokens);
             hasTokens = true;
-            AvalibleTokens(tranches[indexOfTranche].valueForTranche, requiredTokens, hasTokens);
-            //return hasTokens;
+            
         } else {
             hasTokens = false;
-        }       
+        }   
+        AvalibleTokens(tranches[indexOfTranche].valueForTranche, requiredTokens, hasTokens);     
         return hasTokens;
     }
 

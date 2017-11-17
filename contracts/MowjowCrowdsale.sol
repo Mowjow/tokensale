@@ -16,7 +16,7 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
     // The token being sold
     MowjowToken mowjowToken;    
     FinalizableMowjow public finalizableMowjow;
-    address walletTeam;
+    address public walletTeam = 0x12345;
 
     /**
     * event for token purchase logging

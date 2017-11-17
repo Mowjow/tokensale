@@ -69,7 +69,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
             should.exist(event)
             event.args.freeTokens.should.be.bignumber.equal(400000000)  
             event.args.requireTokens.should.be.bignumber.equal(33000)
-            event.args.hasTokensForSale.should.be.equal(true) 
+            event.args.hasTokensForSale.should.be.equal(false) 
         }) 
     }) 
 })

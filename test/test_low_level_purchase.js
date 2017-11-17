@@ -12,15 +12,17 @@ const should = require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should()
 
+
 const MowjowCrowdsale = artifacts.require('MowjowCrowdsale')
 const MowjowToken = artifacts.require('MowjowToken')
 const TrancheStrategy = artifacts.require('TrancheStrategy')
+const FinalizableMowjow = artifacts.require('FinalizableMowjow')
 
-contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
-  const cap = ether(5)
-  const lessThanCap = ether(1)
+contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
+  const cap = ether(0.1)
+  const lessThanCap = ether(0.01)
   const rate = new BigNumber(20000)
-  const value = ether(0.000001)
+  const value = ether(0.0000001)
 
   const expectedTokenAmount = rate.mul(value)
 
@@ -38,8 +40,11 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     this.endTime = this.startTime + duration.weeks(8);
     this.afterEndTime = this.endTime + duration.seconds(1)
 
+    this.finalizableMowjow = await FinalizableMowjow.deployed()
     this.trancheStrategy = await TrancheStrategy.deployed()
-    this.mowjowCrowdsale = await MowjowCrowdsale.new(this.startTime, this.endTime, rate, wallet, cap, this.trancheStrategy.address)
+    this.mowjowCrowdsale = await MowjowCrowdsale.new(
+      this.startTime, this.endTime, rate, wallet, cap,
+      this.trancheStrategy.address, this.finalizableMowjow.address)
     let tokenAddress = await this.mowjowCrowdsale.token();
     this.token = MowjowToken.at(await this.mowjowCrowdsale.token())
   })

@@ -15,5 +15,5 @@ contract MowjowToken is MintableToken, Vesting {
     function MowjowToken() {
         totalSupply = INITIAL_SUPPLY;
         balances[msg.sender] = INITIAL_SUPPLY;
-    }  
+    }   
 }

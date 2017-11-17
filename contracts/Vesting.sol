@@ -2,11 +2,11 @@ pragma solidity ^0.4.11;
  
 import "zeppelin-solidity/contracts/math/SafeMath.sol"; 
 import "zeppelin-solidity/contracts/math/Math.sol";
-import "zeppelin-solidity/contracts/token/LimitedTransferToken.sol";   
+import "zeppelin-solidity/contracts/token/LimitedTransferToken.sol";  
+//import "zeppelin-solidity/contracts/token/ERC20Basic.sol"; 
 
 contract Vesting is  LimitedTransferToken { 
-    using SafeMath for uint256;
-    uint256 MAX_GRANTS_PER_ADDRESS = 20;
+    using SafeMath for uint256; 
 
     struct TokenGrant {
         address granter;     // 20 bytes
@@ -55,13 +55,13 @@ contract Vesting is  LimitedTransferToken {
         NewTokenGrant(msg.sender, _to, _value, count - 1);
     }
 
-  /**
-   * @dev Revoke the grant of tokens of a specifed address.
-   * @param _holder The address which will have its tokens revoked.
-   * @param _grantId The id of the token grant.
-   */
-  function revokeTokenGrant(address _holder, uint256 _grantId) public { 
-  }
+    /**
+    * @dev Revoke the grant of tokens of a specifed address.
+    * @param _holder The address which will have its tokens revoked.
+    * @param _grantId The id of the token grant.
+    */
+    function revokeTokenGrant(address _holder, uint256 _grantId) public { 
+    }
 
     /**
     * @dev Calculate the total amount of transferable tokens of a holder at a given time
@@ -69,9 +69,9 @@ contract Vesting is  LimitedTransferToken {
     * @param time uint256 The specific time.
     * @return An uint256 representing a holder's total amount of transferable tokens.
     */
-    function transferableTokens(address holder, uint256 time) public constant returns (uint256) {
+    function transferableTokens(address holder, uint64 time) public constant returns (uint256) {
         uint256 grantIndex = tokenGrantsCount(holder);
-       // if (grantIndex == 0) return super.transferableTokens(holder, time); // shortcut for holder without grants
+        if (grantIndex == 0) return super.transferableTokens(holder, time); // shortcut for holder without grants
 
             // Iterate through all the grants the holder has, and add all non-vested tokens
         uint256 nonVested = 0;
@@ -84,7 +84,7 @@ contract Vesting is  LimitedTransferToken {
 
         // Return the minimum of how many vested can transfer and other value
         // in case there are other limiting transferability factors (default is balanceOf)
-       // return Math.min256(vestedTransferable, super.transferableTokens(holder, time));
+        return Math.min256(vestedTransferable, super.transferableTokens(holder, time));
     }    
 
     /**
