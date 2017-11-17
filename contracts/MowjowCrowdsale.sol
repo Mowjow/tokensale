@@ -42,7 +42,7 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
     ) CappedCrowdsale(_cap) Crowdsale(_startTime, _endTime, _rate, _wallet) {
         finalizableMowjow = _finalizableMowjow;
         trancheStrategy = _trancheStrategy;
-        trancheStrategy.setParams(_startTime, _rate);
+        trancheStrategy.setRate(_rate);
     }
 
     /*
@@ -58,7 +58,7 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
         mowjowToken.mint(beneficiary, tokensAndBonus); 
         
         MowjowTokenPurchase(msg.sender, beneficiary, weiAmount, tokensAndBonus);
-        trancheStrategy.addTokensSoldInTranche(tokensAndBonus);
+        trancheStrategy.soldInTranche(tokensAndBonus);
         forwardFunds();
     }
 
@@ -77,8 +77,8 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
     function validPurchase() internal constant returns (bool) { 
         require(msg.value != 0);
         uint256 requireTokens = msg.value.mul(rate); 
-        //trancheStrategy.getFreeTokensInTranche(requireTokens);
-        require(trancheStrategy.getFreeTokensInTranche(requireTokens)); 
+        trancheStrategy.getFreeTokensInTranche(requireTokens);
+        //require(trancheStrategy.getFreeTokensInTranche(requireTokens)); 
         require(!hasEnded()); 
         return true; 
     }    

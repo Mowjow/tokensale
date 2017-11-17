@@ -15,7 +15,7 @@ const MowjowCrowdsale = artifacts.require('MowjowCrowdsale')
 const MowjowToken = artifacts.require('MowjowToken')
 const TrancheStrategy = artifacts.require('TrancheStrategy')
 
-contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
+contract('TrancheStrategy', function ([_, investor, wallet, purchaser]) {
     const cap = ether(5)
     const lessThanCap = ether(1)
     const rate = new BigNumber(20000)
@@ -46,6 +46,10 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     })
 
     describe('creating a valid TrancheStrategy constructor', function () {
+        // beforeEach(async function () {
+        //     this.trancheStrategy =  await TrancheStrategy.deployed()
+
+        // })  
 
         it('should valid new instance', async function () {
             await TrancheStrategy.new().should.be.fulfilled;
@@ -53,14 +57,14 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
 
 
         it('should valid counting tokens', async function () {
-            const { logs } =  await this.trancheStrategy.countTokens(33)  
-            const event = logs.find(e => e.event === 'TokenForInvestor')
-            should.exist(event)
-            event.args._token.should.be.bignumber.equal(0)  
-            event.args._tokenAndBonus.should.be.bignumber.equal(0)
+            await this.trancheStrategy.setRate(100); 
+            const { logs } =  await this.trancheStrategy.countTokens(100)  
+             const event = logs.find(e => e.event === 'TokenForInvestor')
+             should.exist(event)
+            event.args._token.should.be.bignumber.equal(10000)  
+            event.args._tokenAndBonus.should.be.bignumber.equal(15000)
             event.args.indexOfperiod.should.be.bignumber.equal(0)
-            event.args.bonus.should.be.bignumber.equal(50)
-            //event.args.currentTime.should.be.bignumber.equal(55)
+            event.args.bonus.should.be.bignumber.equal(50) 
         }) 
 
         it('should count free token', async function () {
@@ -69,7 +73,59 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
             should.exist(event)
             event.args.freeTokens.should.be.bignumber.equal(400000000)  
             event.args.requireTokens.should.be.bignumber.equal(33000)
+            event.args.hasTokensForSale.should.be.equal(true) 
+        }) 
+
+        it('should count free tokens', async function () {
+            const { logs } =  await this.trancheStrategy.getFreeTokensInTranche(400000000)  
+            const event = logs.find(e => e.event === 'AvalibleTokens')
+            should.exist(event)
+            event.args.freeTokens.should.be.bignumber.equal(400000000)  
+            event.args.requireTokens.should.be.bignumber.equal(400000000)
             event.args.hasTokensForSale.should.be.equal(false) 
         }) 
+
+        it('should count free tokens after sale', async function () {
+            await this.trancheStrategy.soldInTranche(100000000)
+            const { logs } =  await this.trancheStrategy.getFreeTokensInTranche(200000000)  
+            const event = logs.find(e => e.event === 'AvalibleTokens')
+            should.exist(event)
+            event.args.freeTokens.should.be.bignumber.equal(300000000)  
+            event.args.requireTokens.should.be.bignumber.equal(200000000)
+            event.args.hasTokensForSale.should.be.equal(true) 
+        }) 
+
+        it('should count free tokens after saled of one of tranches', async function () {
+            //await this.trancheStrategy.soldInTranche(300000000)
+            const { logs } =  await this.trancheStrategy.getFreeTokensInTranche(1)  
+            const event = logs.find(e => e.event === 'AvalibleTokens')
+            should.exist(event)
+            event.args.freeTokens.should.be.bignumber.equal(300000000)  
+            event.args.requireTokens.should.be.bignumber.equal(1)
+            event.args.hasTokensForSale.should.be.equal(true) 
+        })
     }) 
+
+    describe('TrancheStrategy between tranches', function () {
+        
+                it('should sold all the tranche ', async function () {
+                    const _bonuses          = [50, 35, 20, 5, 0];   //rate of bonus for the current tranche
+                    const _valueForTranches = [4e8, 4e8, 4e8, 4e8, 4e8];
+                    let trancheStrategy =  await TrancheStrategy.new(_bonuses, _valueForTranches)
+                    await trancheStrategy.soldInTranche(400000000)
+                    const { logs } =  await  trancheStrategy.getFreeTokensInTranche(200000000)  
+                    const event = logs.find(e => e.event === 'AvalibleTokens')
+                    should.exist(event)
+                    event.args.freeTokens.should.be.bignumber.equal(0)  
+                    event.args.requireTokens.should.be.bignumber.equal(200000000)
+                    event.args.hasTokensForSale.should.be.equal(true) 
+                    await trancheStrategy.soldInTranche(100000000)
+                    const { logs1 } =  await  trancheStrategy.getFreeTokensInTranche(100000000)  
+                    const event1 = logs1.find(e => e.event === 'AvalibleTokens')
+                    should.exist(event1)
+                    event1.args.freeTokens.should.be.bignumber.equal(200000000)  
+                    event1.args.requireTokens.should.be.bignumber.equal(100000000)
+                    event1.args.hasTokensForSale.should.be.equal(true) 
+                })
+            })
 })
