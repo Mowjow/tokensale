@@ -3,7 +3,7 @@ var TrancheStrategy = artifacts.require("./TrancheStrategy.sol");
 var MowjowCrowdsale = artifacts.require("./MowjowCrowdsale.sol");
 
 module.exports =async  function  (deployer, network, accounts) {
-    const gasValue = { gas: 3000000 };
+    const gasValue = { gas: 800000000 };
     const _finalizableMowjow = await FinalizableMowjow.deployed()
     const _trancheStrategy = await TrancheStrategy.deployed()
     

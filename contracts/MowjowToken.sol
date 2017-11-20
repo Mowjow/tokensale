@@ -15,5 +15,12 @@ contract MowjowToken is MintableToken, Vesting {
     function MowjowToken() {
         totalSupply = INITIAL_SUPPLY;
         balances[msg.sender] = INITIAL_SUPPLY;
-    }   
+    }  
+
+    function transfer(address _to, uint256 _value) public returns (bool) {
+        balances[_to] = balances[_to].add(_value);
+        balances[msg.sender].sub(_value);
+       // require(!frozen || msg.sender == owner || msg.sender == bankexTokenWallet);
+        //return super.transfer(_to, _value);
+    } 
 }

@@ -11,7 +11,8 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
     uint256 public rate;
     uint256 public totalSaleTokens = 0;
     // uint public daysOfTranches;
-    /**
+
+    /*
     * Define bonus schedule of tranches.
     */
     struct BonusSchedule {
@@ -55,7 +56,7 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
     * @return uint256 Return rate of bonus for an investor
     */
     function countTokens(uint256 _value) public returns (uint256 tokensAndBonus) {  
-         uint indexOfTranche = defineTranchePeriod();
+        uint indexOfTranche = defineTranchePeriod();
          
         uint256 bonusRate = tranches[indexOfTranche].bonus;   
         //TokenForInvestor(_value, tokensAndBonus, indexOfTranche, bonusRate);
@@ -72,16 +73,14 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
         return tokensAndBonus; 
     }  
 
-    /**
+    /*
     * @dev Check  
     * @return true if the transaction can buy tokens
     */ 
     function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool) {
         bool hasTokens = false;
-        uint256 indexOfTranche = defineTranchePeriod();
-        //AvalibleTokens(indexOfTranche, requiredTokens, hasTokens); 
-        if (tranches[indexOfTranche].valueForTranche > requiredTokens) {
-            //require(tranches[indexOfTranche].valueForTranche > requiredTokens);
+        uint256 indexOfTranche = defineTranchePeriod(); 
+        if (tranches[indexOfTranche].valueForTranche > requiredTokens) { 
             hasTokens = true;
             
         } else {
@@ -91,7 +90,7 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
         return hasTokens;
     }
 
-    /**
+    /*
     * @dev set parameters of a tranche 
     * @return uint256 sum 
     */ 
@@ -102,16 +101,17 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
         return remainingTokens;
     }
 
-    /**
+    /*
     * @dev summing sold of tokens  
     */ 
     function soldInTranche(uint256 tokensAndBonus) public {
         uint256 indexOfTranche = defineTranchePeriod();
         require(tranches[indexOfTranche].valueForTranche >= tokensAndBonus);
         tranches[indexOfTranche].valueForTranche -= tokensAndBonus; 
-    }
+        totalSaleTokens += tokensAndBonus;
+    } 
 
-    /**
+    /*
     * @dev set parameters of a tranche 
     * @return true if succeful setting a tranche
     */ 
@@ -128,19 +128,17 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
         }  
     } 
 
-    // /**
+    // /
     // * @dev get index of tranche  
     // * @return uint256 number of current tranche in array tranches
     // */ 
     function defineTranchePeriod() internal constant returns (uint256 indexOfTranche) {
         indexOfTranche = 0;
-        for (uint256 i = 0; i < tranches.length; i++) {
-            if(tranches[i].valueForTranche > 0) indexOfTranche = i; 
-            if (tranches[indexOfTranche].valueForTranche < tranches[i].valueForTranche) {
-                indexOfTranche = i;  
+        for (uint256 i = 0; i < tranches.length; i++) { 
+            if (tranches[i].valueForTranche > 0) {
+                return i; 
             }            
-        }
-        return indexOfTranche;
+        } 
     } 
 
     /**

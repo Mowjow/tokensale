@@ -8,6 +8,8 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./MowjowToken.sol";
 import "./TrancheStrategy.sol";
 import "./FinalizableMowjow.sol";
+import "./PreIcoMowjow.sol";
+
 
 contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
 
@@ -18,7 +20,15 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
     FinalizableMowjow public finalizableMowjow;
     address public walletTeam = 0x12345;
 
-    /**
+
+    /** State machine    
+    * - Prefunding: We have not passed start time yet
+    * - Funding: Active crowdsale
+    * - Finalized: The finalized has been called and succesfully executed
+    */
+    enum State{PreFunding, Funding, Finalized, Failure}
+
+    /*
     * event for token purchase logging
     * @param purchaser who paid for the tokens
     * @param beneficiary who got the tokens
@@ -28,6 +38,13 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
     event MowjowTokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
     TrancheStrategy trancheStrategy;
+    PreIcoMowjow public preIcoMowjow;
+
+    modifier preIcoTime() {
+        require(now < startTime);
+        _;
+    }
+
     /*
     * @dev The constructor function to initialize the token related properties
     * @param _startTime uint256     Specifies the start date of the presale
@@ -42,24 +59,44 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
     ) CappedCrowdsale(_cap) Crowdsale(_startTime, _endTime, _rate, _wallet) {
         finalizableMowjow = _finalizableMowjow;
         trancheStrategy = _trancheStrategy;
-        trancheStrategy.setRate(_rate);
+        trancheStrategy.setRate(_rate);          
     }
 
     /*
     * @dev This method have  overrided  from  crowdsale
     */ 
     function buyTokens(address beneficiary) public payable {
-        require(beneficiary != 0x0);
-        require(validPurchase());  
-        uint256 weiAmount = msg.value;  
-        // update state
-        weiRaised = weiRaised.add(weiAmount); 
-        uint256 tokensAndBonus = trancheStrategy.countTokens(msg.value); 
-        mowjowToken.mint(beneficiary, tokensAndBonus); 
+        //require(address(beneficiary) == 0x0);
+        if(getState() == State.PreFunding) {
+            //preIco 
+            require(validPurchasePreIco(beneficiary));
+             
+            //require(validPurchase());  
+            uint256 weiAmountPreIco = msg.value;  
+            // update state
+            weiRaised = weiRaised.add(weiAmountPreIco); 
+            uint256 tokensAndBonusPreIco = preIcoMowjow.buyPreIcoTokens(msg.value); 
+           
+            mowjowToken.transfer(beneficiary, tokensAndBonusPreIco);  
+            MowjowTokenPurchase(msg.sender, beneficiary, weiAmountPreIco, tokensAndBonusPreIco);
+            
+        } else if(getState() == State.Funding)
+            require(validPurchase());  
+            uint256 weiAmount = msg.value;  
+            // update state
+            weiRaised = weiRaised.add(weiAmount); 
+            uint256 tokensAndBonus = trancheStrategy.countTokens(msg.value); 
+            mowjowToken.mint(beneficiary, tokensAndBonus);  
+            MowjowTokenPurchase(msg.sender, beneficiary, weiAmount, tokensAndBonus); 
+        }
         
-        MowjowTokenPurchase(msg.sender, beneficiary, weiAmount, tokensAndBonus);
-        trancheStrategy.soldInTranche(tokensAndBonus);
-        forwardFunds();
+    }
+
+    /*
+    * @dev This method have  overrided  from  crowdsale
+    */ 
+    function startPreIco() public onlyOwner {
+        preIcoMowjow = new PreIcoMowjow(startTime); 
     }
 
     // overriding Crowdsale#hasEnded to add cap logic
@@ -69,6 +106,28 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
         bool capReached = weiRaised >= cap; 
         return super.hasEnded() || capReached || noOverCap;
     } 
+
+    /**
+    * Crowdfund state machine management.
+    *
+    * We make it a function and do not assign the result to a variable, so there is no chance of the variable being stale.
+    */
+    function getState() public constant returns (State) {
+        if (isFinalized) return State.Finalized;   
+        else if (block.timestamp < startTime) return State.PreFunding;
+        else if (block.timestamp <= endTime && !hasEnded()) return State.Funding;  
+        else return State.Failure;
+    }
+
+    /*
+    * @dev Check the sale period is still and investor's amount no zero
+    * @return true if the transaction can buy tokens
+    */ 
+    function validPurchasePreIco(address preIcoInvestor) internal constant preIcoTime returns (bool) { 
+        //require(address(preIcoMowjow) == 0);  
+        require(preIcoMowjow.isWhitelistInvestors(preIcoInvestor));  
+        return true;    
+    }
     
     /*
     * @dev Check the sale period is still and investor's amount no zero
@@ -89,7 +148,7 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
     * @return MintableToken 
     */
     function createTokenContract() internal returns (MintableToken) {
-        mowjowToken = new MowjowToken();
+        mowjowToken = new MowjowToken(); 
         return mowjowToken;
     }
 
@@ -99,7 +158,7 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
         wallet.transfer(msg.value);
     }
 
-    /**
+    /*
     * @dev The overriding function from zeppelin-solidity/contracts/crowdsale/FinalizableCrowdsale.sol 
     * should call super.finalization() to ensure the chain of finalization is executed entirely.
     * 

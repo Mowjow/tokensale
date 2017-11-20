@@ -153,7 +153,7 @@ contract Vesting is  LimitedTransferToken {
     * @return An uint256 representing the date of the last transferable tokens.
     */
     function lastTokenIsTransferableDate(address holder) public constant returns (uint256 date) {
-        date =  now;
+        date = now;
         uint256 grantIndex = grants[holder].length;
         for (uint256 i = 0; i < grantIndex; i++) {
             date = Math.max256(grants[holder][i].vesting, date);

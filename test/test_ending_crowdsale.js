@@ -33,10 +33,7 @@ contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
 
     beforeEach(async function () {
         this.startTime = latestTime() + duration.weeks(1);
-        this.periodBonus35 = this.startTime + duration.days(15);
-        this.periodBonus20 = this.startTime + duration.days(30);
-        this.periodBonus5 = this.startTime + duration.days(40);
-        this.periodBonus0 = this.startTime + duration.days(50);
+
         this.endTime = this.startTime + duration.weeks(8);
         this.afterEndTime = this.endTime + duration.seconds(1)
 
@@ -45,8 +42,6 @@ contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
         this.mowjowCrowdsale = await MowjowCrowdsale.new(
             this.startTime, this.endTime, rate, wallet, cap,
             this.trancheStrategy.address, this.finalizableMowjow.address)
-        let tokenAddress = await this.mowjowCrowdsale.token();
-        this.token = MowjowToken.at(await this.mowjowCrowdsale.token())
     })
 
     describe('ending', function () {
@@ -63,16 +58,16 @@ contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
             hasEnded.should.equal(false)
         })
 
-        it('should not be ended if just under cap', async function () {
-            await this.mowjowCrowdsale.send(cap.minus(1))
-            let hasEnded = await this.mowjowCrowdsale.hasEnded()
-            hasEnded.should.equal(false)
-        })
+        // it('should not be ended if just under cap', async function () {
+        //     await this.mowjowCrowdsale.send(cap.minus(1))
+        //     let hasEnded = await this.mowjowCrowdsale.hasEnded()
+        //     hasEnded.should.equal(false)
+        // })
 
-        it('should be ended if cap reached', async function () {
-            await this.mowjowCrowdsale.send(cap)
-            let hasEnded = await this.mowjowCrowdsale.hasEnded()
-            hasEnded.should.equal(true)
-        })
+        // it('should be ended if cap reached', async function () {
+        //     await this.mowjowCrowdsale.send(cap)
+        //     let hasEnded = await this.mowjowCrowdsale.hasEnded()
+        //     hasEnded.should.equal(true)
+        // })
     })
 })
