@@ -1,7 +1,6 @@
 pragma solidity ^0.4.11; 
 
-import "zeppelin-solidity/contracts/token/MintableToken.sol";
-import "zeppelin-solidity/contracts/crowdsale/CappedCrowdsale.sol"; 
+import "zeppelin-solidity/contracts/token/MintableToken.sol"; 
 import "zeppelin-solidity/contracts/crowdsale/FinalizableCrowdsale.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol"; 
 import "zeppelin-solidity/contracts/math/SafeMath.sol"; 
@@ -13,7 +12,7 @@ import "./EarlyContribStrategy.sol";
 import "./PreIcoStrategy.sol";
 
 
-contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
+contract MowjowCrowdsale is FinalizableCrowdsale {
 
     using SafeMath for uint256; 
 
@@ -57,7 +56,7 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
     function MowjowCrowdsale(
         uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap, EarlyContribStrategy _earlyContribStrategy,
         PreIcoStrategy _preIcoStrategy, TrancheStrategy _trancheStrategy, FinalizableMowjow _finalizableMowjow
-        ) CappedCrowdsale(_cap) Crowdsale(_startTime, _endTime, _rate, _wallet) {
+        ) Crowdsale(_startTime, _endTime, _rate, _wallet) {
         finalizableMowjow = _finalizableMowjow;
         trancheStrategy = _trancheStrategy;
         preIcoStrategy = _preIcoStrategy;
@@ -108,9 +107,9 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
     // overriding Crowdsale#hasEnded to add cap logic
     // @return true if crowdsale event has ended
     function hasEnded() public constant returns (bool) {
-        bool noOverCap = msg.value > cap; 
-        bool capReached = weiRaised >= cap; 
-        return super.hasEnded() || capReached || noOverCap;
+        // bool noOverCap = msg.value > cap; 
+        // bool capReached = weiRaised >= cap; 
+        return super.hasEnded();// || capReached || noOverCap;
     } 
 
     /**
@@ -207,9 +206,5 @@ contract MowjowCrowdsale is CappedCrowdsale, FinalizableCrowdsale {
         uint256 totalTranchesSaleTokens = trancheStrategy.totalSaleTokens();
         uint256 remainingTokens = trancheStrategy.countRemainingTokens();
         finalizableMowjow.doFinalization(totalTranchesSaleTokens, remainingTokens, weiRaised, mowjowToken);
-        uint256 startTimeDistribution = block.timestamp;
-        uint256 cliff =  startTimeDistribution.add(60 days);
-        uint256 vesting = startTimeDistribution.add(90 days);
-        mowjowToken.grantVestedTokens(walletTeam, remainingTokens, startTimeDistribution, cliff, vesting, false, false);
     }
 }

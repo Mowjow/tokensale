@@ -50,20 +50,20 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
         this.token = MowjowToken.at(await this.mowjowCrowdsale.token())
     })
 
-    describe('payments in pre ico with 100% bonuses', function () {
+    describe('payments for early contributors', function () {
         beforeEach(async function () {
             await increaseTimeTo(this.startTime - duration.days(1))
         })
 
         it('should add investor to early contributor list successfuly', async function () {
-            const { logs } = await this.mowjowCrowdsale.addEarlyContributors(investor, value) 
+            const { logs } = await this.mowjowCrowdsale.addEarlyContributors(investor, value)
 
             const event = logs.find(e => e.event === 'EarlyContribPurchase')
             should.exist(event)
         })
 
         it('should 100% bonus for early contributor', async function () {
-            const { logs } = await this.mowjowCrowdsale.addEarlyContributors(investor, value)  
+            const { logs } = await this.mowjowCrowdsale.addEarlyContributors(investor, value)
             const event = logs.find(e => e.event === 'EarlyContribPurchase')
             should.exist(event)
             event.args.beneficiary.should.be.bignumber.equal(investor)
@@ -71,7 +71,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
             event.args.amount.should.be.bignumber.equal(expectedTokenAmount)
             const balance = await this.token.balanceOf(investor)
             balance.should.be.bignumber.equal(expectedTokenAmount)
-        }) 
+        })
 
         it('should reject add to early contributor list after end pre ico', async function () {
             await increaseTimeTo(this.startTime)

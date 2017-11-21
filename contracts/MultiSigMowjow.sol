@@ -32,42 +32,43 @@ contract MultiSigMowjow {
     }
 
     modifier ownerExists(address owner) {
-        require(!isOwner[owner]);
+        require(isOwner[owner]);
         _;
     }
 
     modifier notNull(address _address) {
-        require(_address == 0);
+        require(_address != 0);
         _;
     }
 
     modifier transactionExists(uint transactionId) {
-        require(transactions[transactionId].destination == 0);
+        require(transactions[transactionId].destination != 0);
         _;
     }
 
     modifier notConfirmed(uint transactionId, address owner) {
-        require(confirmations[transactionId][owner]);
+        require(!confirmations[transactionId][owner]);
         _;
     }
 
     modifier notExecuted(uint transactionId) {
-        require(transactions[transactionId].executed);           
+        require(!transactions[transactionId].executed);           
         _;
     }
 
-    /**
-    */
-    function MultiSigMowjow (address[] _owners) {
+    // @dev Contract constructor sets initial owners and required number of confirmations.
+    // @param _owners List of initial owners.
+    // @param _required Number of required confirmations.
+    function MultiSigMowjow (address[] _owners, uint _required) {
         require(_owners.length > 1);
 
         address lastAdd = address(0); 
-        for (uint i=0; i < _owners.length; i++) {
-            require(_owners[i] > lastAdd);
+        for (uint i = 0; i < _owners.length; i++) {
+            require(isOwner[_owners[i]] || _owners[i] != 0); 
             isOwner[_owners[i]] = true;
-            lastAdd = _owners[i];
         }
         owners = _owners;
+        required = _required;
 
     }
 
@@ -90,7 +91,7 @@ contract MultiSigMowjow {
         public
         returns (uint transactionId)
     {
-        transactionId = addTransaction(destination, value, data);
+        transactionId = addTransaction(destination, value, data); 
         confirmTransaction(transactionId);
     }
 

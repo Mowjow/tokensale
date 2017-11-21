@@ -1,5 +1,5 @@
 pragma solidity ^0.4.11; 
- 
+
 
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./PrisingStrategy.sol";
@@ -12,7 +12,8 @@ contract  PreIcoStrategy {
     uint256 public rate;
     uint256 public totalSaleTokens = 0;  
     uint256 bonus;
-    uint256 maxCap; 
+    uint256 maxCap;
+    uint256 totalTokensForSale; 
 
     //events for testing  
     event TokensForWhiteListInvestors(uint256 _token, uint256 _tokenAndBonus, uint256 bonus);  
@@ -32,6 +33,7 @@ contract  PreIcoStrategy {
     */
     function setRate(uint256 _rate) public { 
         rate = _rate;
+        totalTokensForSale = maxCap.mul(rate);
     } 
 
     /*
@@ -58,10 +60,19 @@ contract  PreIcoStrategy {
     * @return true if the transaction can buy tokens
     */ 
     function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool) { 
-        uint256 totalTokensForSale = maxCap.mul(rate);
         require((totalTokensForSale - totalSaleTokens) > requiredTokens);
         return true;
     } 
+
+    function isNoEmptyPreIcoTranche() public returns (bool) {
+    //     if((totalTokensForSale - totalSaleTokens) > 0) {
+    //         return true;
+    //         } else {
+    //             return false;
+    //         }
+    // }
+        
+    }
      
     /*
     * @dev summing sold of tokens  

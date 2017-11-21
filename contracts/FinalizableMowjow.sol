@@ -16,7 +16,6 @@ contract FinalizableMowjow is MowjowToken {
     address public walletIssuer;
     address public walletGrowsReserve;
     address public walletGrowsFund;
-
     
     function doFinalization(uint256 totalTranchesSaleTokens, uint256 remainingTokensAfterTranches, uint256 weiRaised, MowjowToken token) public returns(bool) {
         require(remainingTokensAfterTranches > 0);

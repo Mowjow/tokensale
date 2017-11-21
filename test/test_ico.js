@@ -26,7 +26,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     const rate = new BigNumber(20000)
     const value = ether(0.0000000000000001)
 
-    const expectedTokenAmount = rate.mul(value).mul(1.5)
+    const expectedTokenAmount = rate.mul(value)
 
     before(async function () {
         //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
@@ -52,40 +52,38 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
 
     describe('payments in pre ico with 100% bonuses', function () {
         beforeEach(async function () {
-            await increaseTimeTo(this.startTime - duration.days(1))
+            await increaseTimeTo(this.startTime)
         })
 
-        it('should add investor to whitelist successfuly and permition for invest', async function () {
-            await this.mowjowCrowdsale.addWhitelistInvestors(investor)
-
+        it('should investor pay in first tranche', async function () { 
             const { logs } = await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
 
-            const event = logs.find(e => e.event === 'PreIcoPurchase')
+            const event = logs.find(e => e.event === 'MowjowTokenPurchase')
             should.exist(event)
         })
 
-        it('should 50% bonus for  whitelist investor ', async function () {
-            await this.mowjowCrowdsale.addWhitelistInvestors(investor)
-
+        it('should 35% bonus for in first tranche', async function () { 
+            let expectTokensWith35Bonuses = expectedTokenAmount.mul(1.35)
             const { logs } = await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
 
-            const event = logs.find(e => e.event === 'PreIcoPurchase')
+            const event = logs.find(e => e.event === 'MowjowTokenPurchase')
             should.exist(event)
             event.args.beneficiary.should.be.bignumber.equal(investor)
+          
             event.args.value.should.be.bignumber.equal(value)
-            event.args.amount.should.be.bignumber.equal(expectedTokenAmount)
+            event.args.amount.should.be.bignumber.equal(expectTokensWith35Bonuses)
             const balance = await this.token.balanceOf(investor)
-            balance.should.be.bignumber.equal(expectedTokenAmount)
+            balance.should.be.bignumber.equal(expectTokensWith35Bonuses)
         })
 
-        it('should reject after payment not from whitelist', async function () {
-            await this.mowjowCrowdsale.addWhitelistInvestors(investor)
-            await this.mowjowCrowdsale.buyTokens(purchaser, { value, from: purchaser }).should.be.rejectedWith(EVMThrow)
-        })
+        // it('should reject after payment not from whitelist', async function () {
+        //     await this.mowjowCrowdsale.addWhitelistInvestors(investor)
+        //     await this.mowjowCrowdsale.buyTokens(purchaser, { value, from: purchaser }).should.be.rejectedWith(EVMThrow)
+        // })
 
-        it('should reject add whitelist investor after end pre ico', async function () {
-            await increaseTimeTo(this.startTime)
-            await this.mowjowCrowdsale.addWhitelistInvestors(investor).should.be.rejectedWith(EVMThrow)
-        })
+        // it('should reject add whitelist investor after end pre ico', async function () {
+        //     await increaseTimeTo(this.startTime)
+        //     await this.mowjowCrowdsale.addWhitelistInvestors(investor).should.be.rejectedWith(EVMThrow)
+        // })
     })
 })

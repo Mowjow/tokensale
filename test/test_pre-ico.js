@@ -50,7 +50,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
         this.token = MowjowToken.at(await this.mowjowCrowdsale.token())
     })
 
-    describe('payments in pre ico with 100% bonuses', function () {
+    describe('payments in pre ico for whitelist investors', function () {
         beforeEach(async function () {
             await increaseTimeTo(this.startTime - duration.days(1))
         })
