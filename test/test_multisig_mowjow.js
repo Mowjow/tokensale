@@ -77,8 +77,9 @@ contract('MowjowCrowdsale', function ([_, investor1, investor2, investor3, inves
             await this.multiSigMowjow.send(value, { from: purchaser })
             let { logs } = await this.multiSigMowjow.submitTransaction(resiver, 1, "payments for test ", {from: investor1})
             console.log("logs=", logs)
-            // const transactionIndex = logs.find(e => e.transactionIndex === transactionIndex)
-            // console.log("logs.transactionIndex", transactionIndex)
+            const event = logs.find(e => e.Confirmation === "Confirmation")
+            should.exist(event)
+            console.log("logs.transactionIndex", transactionIndex)
             balance = web3.eth.getBalance(resiver);
             console.log("balance1", balance)
             //confirmTransaction(logs.transactionIndex)

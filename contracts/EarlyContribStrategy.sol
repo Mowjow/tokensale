@@ -8,7 +8,7 @@ contract  EarlyContribStrategy {
     using SafeMath for uint256;
  
     uint256 public rate;
-    uint256 public totalSaleTokens = 0;  
+    uint256 public totalSoldTokens = 0;  
     uint256 bonus;
     uint256 maxCap; 
 
@@ -57,7 +57,7 @@ contract  EarlyContribStrategy {
     */ 
     function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool) { 
         uint256 totalTokensForSale = maxCap.mul(rate);
-        require((totalTokensForSale - totalSaleTokens) > requiredTokens);
+        require((totalTokensForSale - totalSoldTokens) > requiredTokens);
         return true;
     } 
      
@@ -65,6 +65,6 @@ contract  EarlyContribStrategy {
     * @dev summing sold of tokens  
     */ 
     function soldInTranche(uint256 tokensAndBonus) public {
-        totalSaleTokens += tokensAndBonus;
+        totalSoldTokens += tokensAndBonus;
     }  
 }

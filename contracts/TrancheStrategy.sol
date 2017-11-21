@@ -1,15 +1,16 @@
-pragma solidity ^0.4.11; 
+pragma solidity ^0.4.11;  
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./PrisingStrategy.sol";
+
 
 contract  TrancheStrategy is PrisingStrategy, Ownable { 
     using SafeMath for uint256;
 
     uint256 public startTime;
     uint256 public rate;
-    uint256 public totalSaleTokens = 0;
+    uint256 public totalSoldTokens = 0;
     // uint public daysOfTranches;
 
     /*
@@ -107,9 +108,21 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
     function soldInTranche(uint256 tokensAndBonus) public {
         uint256 indexOfTranche = defineTranchePeriod();
         require(tranches[indexOfTranche].valueForTranche >= tokensAndBonus);
-        tranches[indexOfTranche].valueForTranche -= tokensAndBonus; 
-        totalSaleTokens += tokensAndBonus;
+        tranches[indexOfTranche].valueForTranche.sub(tokensAndBonus); 
+        totalSoldTokens.add(tokensAndBonus);
     } 
+
+    function isNoEmptyTranches() public returns(bool) {
+        uint256 sumFreeTokens = 0;
+        for (uint i = 0; i < tranches.length; i++) {
+            sumFreeTokens.add(tranches[i].valueForTranche);
+        }
+        if (sumFreeTokens > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     /*
     * @dev set parameters of a tranche 

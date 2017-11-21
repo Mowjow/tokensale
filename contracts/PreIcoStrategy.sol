@@ -10,7 +10,7 @@ contract  PreIcoStrategy {
 
     uint256 public startTime;
     uint256 public rate;
-    uint256 public totalSaleTokens = 0;  
+    uint256 public totalPreIcoSoldTokens = 0;  
     uint256 bonus;
     uint256 maxCap;
     uint256 totalTokensForSale; 
@@ -60,24 +60,22 @@ contract  PreIcoStrategy {
     * @return true if the transaction can buy tokens
     */ 
     function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool) { 
-        require((totalTokensForSale - totalSaleTokens) > requiredTokens);
+        require((totalTokensForSale - totalPreIcoSoldTokens) > requiredTokens);
         return true;
     } 
 
     function isNoEmptyPreIcoTranche() public returns (bool) {
-    //     if((totalTokensForSale - totalSaleTokens) > 0) {
-    //         return true;
-    //         } else {
-    //             return false;
-    //         }
-    // }
-        
+        if ((totalTokensForSale - totalPreIcoSoldTokens) > 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
      
     /*
     * @dev summing sold of tokens  
     */ 
     function soldInTranche(uint256 tokensAndBonus) public {
-        totalSaleTokens += tokensAndBonus;
+        totalPreIcoSoldTokens += tokensAndBonus;
     }  
 }
