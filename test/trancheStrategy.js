@@ -30,11 +30,7 @@ contract('TrancheStrategy', function ([_, investor, wallet, purchaser]) {
     })
 
     beforeEach(async function () {
-        this.startTime = latestTime() + duration.weeks(1);
-        this.periodBonus35 = this.startTime + duration.days(15);
-        this.periodBonus20 = this.startTime + duration.days(30);
-        this.periodBonus5 = this.startTime + duration.days(40);
-        this.periodBonus0 = this.startTime + duration.days(50);
+        this.startTime = latestTime() + duration.weeks(1);    
         this.endTime = this.startTime + duration.weeks(8);
         this.afterEndTime = this.endTime + duration.seconds(1)
 
@@ -62,9 +58,9 @@ contract('TrancheStrategy', function ([_, investor, wallet, purchaser]) {
             const event = logs.find(e => e.event === 'TokenForInvestor')
             should.exist(event)
             event.args._token.should.be.bignumber.equal(10000)
-            event.args._tokenAndBonus.should.be.bignumber.equal(15000)
+            event.args._tokenAndBonus.should.be.bignumber.equal(13500)
             event.args.indexOfperiod.should.be.bignumber.equal(0)
-            event.args.bonus.should.be.bignumber.equal(50)
+            event.args.bonus.should.be.bignumber.equal(35)
         })
 
         it('should count free token', async function () {

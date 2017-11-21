@@ -15,35 +15,37 @@ const should = require('chai')
 
 const MowjowCrowdsale = artifacts.require('MowjowCrowdsale')
 const MowjowToken = artifacts.require('MowjowToken')
+const EarlyContribStrategy = artifacts.require("EarlyContribStrategy");
+const PreIcoStrategy = artifacts.require("PreIcoStrategy");
 const TrancheStrategy = artifacts.require('TrancheStrategy')
 const FinalizableMowjow = artifacts.require('FinalizableMowjow')
+const PreIcoMowjow = artifacts.require('PreIcoMowjow')
 
-contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
+contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     const cap = ether(0.1)
     const lessThanCap = ether(0.01)
     const rate = new BigNumber(20000)
-    const value = ether(0.0000001)
+    const value = ether(0.0000000000000001) 
 
-    const expectedTokenAmount = rate.mul(value)
+    const expectedTokenAmount = rate.mul(value).mul(2)
 
     before(async function () {
         //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
         await advanceBlock()
-    })
+    }) 
 
     beforeEach(async function () {
-        this.startTime = latestTime() + duration.weeks(1);
-        this.periodBonus35 = this.startTime + duration.days(15);
-        this.periodBonus20 = this.startTime + duration.days(30);
-        this.periodBonus5 = this.startTime + duration.days(40);
-        this.periodBonus0 = this.startTime + duration.days(50);
+        this.startTime = latestTime() + duration.weeks(1); 
         this.endTime = this.startTime + duration.weeks(8);
         this.afterEndTime = this.endTime + duration.seconds(1)
 
         this.finalizableMowjow = await FinalizableMowjow.deployed()
+        this.earlyContribStrategy = await EarlyContribStrategy.deployed() 
+        this.preIcoStrategy = await PreIcoStrategy.deployed() 
         this.trancheStrategy = await TrancheStrategy.deployed()
         this.mowjowCrowdsale = await MowjowCrowdsale.new(
             this.startTime, this.endTime, rate, wallet, cap,
+            this.earlyContribStrategy.address, this.preIcoStrategy.address,
             this.trancheStrategy.address, this.finalizableMowjow.address)
         let tokenAddress = await this.mowjowCrowdsale.token();
         this.token = MowjowToken.at(await this.mowjowCrowdsale.token())
@@ -52,11 +54,11 @@ contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
     describe('high-level purchase', function () {
 
         beforeEach(async function () {
-            await increaseTimeTo(this.periodBonus0)
+            await increaseTimeTo(this.startTime)
         })
 
         it('should log purchase', async function () {
-            await increaseTimeTo(this.periodBonus0)
+            await increaseTimeTo(this.startTime)
             const { logs } = await this.mowjowCrowdsale.sendTransaction({ value: value, from: investor })
 
             const event = logs.find(e => e.event === 'MowjowTokenPurchase')

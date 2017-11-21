@@ -10,6 +10,7 @@ contract MultiSigMowjow {
     event Submission(uint indexed transactionId);
     event Execution(uint indexed transactionId);
     event ExecutionFailure(uint indexed transactionId);
+    event Deposit(address indexed sender, uint value);
 
     mapping (address => bool) isOwner;
     address[] public owners;        
@@ -166,5 +167,10 @@ contract MultiSigMowjow {
         Submission(transactionId);
     } 
      
-    function () payable {}
+    
+    /// @dev Fallback function allows to deposit ether.
+    function () payable {
+        if (msg.value > 0)
+            Deposit(msg.sender, msg.value);
+    }
 }

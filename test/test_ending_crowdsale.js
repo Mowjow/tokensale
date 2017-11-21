@@ -15,33 +15,40 @@ const should = require('chai')
 
 const MowjowCrowdsale = artifacts.require('MowjowCrowdsale')
 const MowjowToken = artifacts.require('MowjowToken')
+const EarlyContribStrategy = artifacts.require("EarlyContribStrategy");
+const PreIcoStrategy = artifacts.require("PreIcoStrategy");
 const TrancheStrategy = artifacts.require('TrancheStrategy')
 const FinalizableMowjow = artifacts.require('FinalizableMowjow')
+const PreIcoMowjow = artifacts.require('PreIcoMowjow')
 
-contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
+contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     const cap = ether(0.1)
     const lessThanCap = ether(0.01)
     const rate = new BigNumber(20000)
-    const value = ether(0.0000001)
+    const value = ether(0.0000000000000001) 
 
-    const expectedTokenAmount = rate.mul(value)
+    const expectedTokenAmount = rate.mul(value).mul(2)
 
     before(async function () {
         //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
         await advanceBlock()
-    })
+    }) 
 
     beforeEach(async function () {
-        this.startTime = latestTime() + duration.weeks(1);
-
+        this.startTime = latestTime() + duration.weeks(1); 
         this.endTime = this.startTime + duration.weeks(8);
         this.afterEndTime = this.endTime + duration.seconds(1)
 
         this.finalizableMowjow = await FinalizableMowjow.deployed()
+        this.earlyContribStrategy = await EarlyContribStrategy.deployed() 
+        this.preIcoStrategy = await PreIcoStrategy.deployed() 
         this.trancheStrategy = await TrancheStrategy.deployed()
         this.mowjowCrowdsale = await MowjowCrowdsale.new(
             this.startTime, this.endTime, rate, wallet, cap,
+            this.earlyContribStrategy.address, this.preIcoStrategy.address,
             this.trancheStrategy.address, this.finalizableMowjow.address)
+        let tokenAddress = await this.mowjowCrowdsale.token();
+        this.token = MowjowToken.at(await this.mowjowCrowdsale.token())
     })
 
     describe('ending', function () {
@@ -58,16 +65,16 @@ contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
             hasEnded.should.equal(false)
         })
 
-        // it('should not be ended if just under cap', async function () {
-        //     await this.mowjowCrowdsale.send(cap.minus(1))
-        //     let hasEnded = await this.mowjowCrowdsale.hasEnded()
-        //     hasEnded.should.equal(false)
-        // })
+        it('should not be ended if just under cap', async function () {
+            await this.mowjowCrowdsale.send(cap.minus(1))
+            let hasEnded = await this.mowjowCrowdsale.hasEnded()
+            hasEnded.should.equal(false)
+        })
 
-        // it('should be ended if cap reached', async function () {
-        //     await this.mowjowCrowdsale.send(cap)
-        //     let hasEnded = await this.mowjowCrowdsale.hasEnded()
-        //     hasEnded.should.equal(true)
-        // })
+        it('should be ended if cap reached', async function () {
+            await this.mowjowCrowdsale.send(cap)
+            let hasEnded = await this.mowjowCrowdsale.hasEnded()
+            hasEnded.should.equal(true)
+        })
     })
 })
