@@ -11,15 +11,19 @@ contract MultiSigMowjow {
     event Execution(uint indexed transactionId);
     event ExecutionFailure(uint indexed transactionId);
     event Deposit(address indexed sender, uint value);
+    event OwnerAddition(address indexed owner);
+    event OwnerRemoval(address indexed owner);
+    event RequirementChange(uint required);
+    event OwnerAddition1(address indexed owner); 
 
     mapping (address => bool) isOwner;
     address[] public owners;        
-    mapping (uint => Transaction) public transactions;
+    mapping (uint => TransactionMultisig) public transactions;
     mapping (uint => mapping (address => bool)) public confirmations;
     uint public transactionCount;
     uint public required;
 
-    struct Transaction {
+    struct TransactionMultisig {
         address destination;
         uint value;
         bytes data;
@@ -27,7 +31,7 @@ contract MultiSigMowjow {
     }
 
     modifier onlyWallet() {
-        require(msg.sender != address(this));
+        require(msg.sender == address(this));
         _;
     }
 
@@ -38,6 +42,16 @@ contract MultiSigMowjow {
 
     modifier notNull(address _address) {
         require(_address != 0);
+        _;
+    }
+
+    modifier ownerDoesNotExist(address owner) {
+        require(!isOwner[owner]);
+        _;
+    }
+
+    modifier validRequirement(uint ownerCount, uint _required) {
+        require(_required < ownerCount || _required != 0 || ownerCount != 0);
         _;
     }
 
@@ -82,6 +96,51 @@ contract MultiSigMowjow {
         return owners;
     }
 
+    /// @dev Allows to add a new owner. Transaction has to be sent by wallet.
+    /// @param owner Address of new owner.
+    function addOwner(address owner)
+        public
+        onlyWallet
+        ownerDoesNotExist(owner)
+        notNull(owner)
+        validRequirement(owners.length + 1, required)
+    {
+        isOwner[owner] = true;
+        owners.push(owner);
+        OwnerAddition1(address(this));
+        OwnerAddition(owner);
+    }
+
+    /// @dev Allows to remove an owner. Transaction has to be sent by wallet.
+    /// @param owner Address of owner.
+    function removeOwner(address owner)
+        public
+        onlyWallet
+        ownerExists(owner)
+    {
+        isOwner[owner] = false;
+        for (uint i=0; i < owners.length - 1; i++)
+            if (owners[i] == owner) {
+                owners[i] = owners[owners.length - 1];
+                break;
+            }
+        owners.length -= 1;
+        if (required > owners.length)
+            changeRequirement(owners.length);
+        OwnerRemoval(owner);
+    }
+
+    /// @dev Allows to change the number of required confirmations. Transaction has to be sent by wallet.
+    /// @param _required Number of required confirmations.
+    function changeRequirement(uint _required)
+        public
+        onlyWallet
+        validRequirement(owners.length, _required)
+    {
+        required = _required;
+        RequirementChange(_required);
+    }
+
     // @dev Allows an owner to submit and confirm a transaction.
     // @param destination Transaction target address.
     // @param value Transaction ether value.
@@ -115,13 +174,13 @@ contract MultiSigMowjow {
         notExecuted(transactionId)
     {
         if (isConfirmed(transactionId)) {
-            Transaction transaction = transactions[transactionId];
-            transaction.executed = true;
-            if (transaction.destination.call.value(transaction.value)(transaction.data)) {
+            TransactionMultisig storage tsn = transactions[transactionId];
+            tsn.executed = true;
+            if (tsn.destination.call.value(tsn.value)(tsn.data)) {
                 Execution(transactionId);
             } else {
                 ExecutionFailure(transactionId);
-                transaction.executed = false;
+                tsn.executed = false;
             }           
             
         }
@@ -158,7 +217,7 @@ contract MultiSigMowjow {
         returns (uint transactionId)
     {
         transactionId = transactionCount;
-        transactions[transactionId] = Transaction({
+        transactions[transactionId] = TransactionMultisig({
             destination: destination,
             value: value,
             data: data,
@@ -170,7 +229,7 @@ contract MultiSigMowjow {
      
     
     /// @dev Fallback function allows to deposit ether.
-    function () payable {
+    function () public  payable {
         if (msg.value > 0)
             Deposit(msg.sender, msg.value);
     }

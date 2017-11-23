@@ -13,7 +13,7 @@ contract  EarlyContribStrategy {
     uint256 maxCap; 
 
     //events for testing 
-    event TokenForEarlyContributors(uint256 _token, uint256 _tokenAndBonus, uint256 _bonus); 
+    event TokenForEarlyContributors(uint256 _token, uint256 _tokenAndBonus, uint256 _bonusRate); 
 
     /*
     * @dev Constructor

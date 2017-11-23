@@ -20,7 +20,7 @@ contract('TrancheStrategy', function ([_, investor, wallet, purchaser]) {
     const lessThanCap = ether(1)
     const rate = new BigNumber(20000)
     const value = ether(0.000001)
-
+    const maxRequireTokens = 6e8;
     const expectedTokenAmount = rate.mul(value)
 
     before(async function () {
@@ -67,17 +67,17 @@ contract('TrancheStrategy', function ([_, investor, wallet, purchaser]) {
             const { logs } = await this.trancheStrategy.getFreeTokensInTranche(33000)
             const event = logs.find(e => e.event === 'AvalibleTokens')
             should.exist(event)
-            event.args.freeTokens.should.be.bignumber.equal(400000000)
+            event.args.freeTokens.should.be.bignumber.equal(maxRequireTokens)
             event.args.requireTokens.should.be.bignumber.equal(33000)
             event.args.hasTokensForSale.should.be.equal(true)
         })
 
         it('should count free tokens', async function () {
-            const { logs } = await this.trancheStrategy.getFreeTokensInTranche(400000000)
+            const { logs } = await this.trancheStrategy.getFreeTokensInTranche(maxRequireTokens)
             const event = logs.find(e => e.event === 'AvalibleTokens')
             should.exist(event)
             event.args.freeTokens.should.be.bignumber.equal(400000000)
-            event.args.requireTokens.should.be.bignumber.equal(400000000)
+            event.args.requireTokens.should.be.bignumber.equal(maxRequireTokens)
             event.args.hasTokensForSale.should.be.equal(false)
         })
 
@@ -125,8 +125,8 @@ contract('TrancheStrategy', function ([_, investor, wallet, purchaser]) {
         })
 
         it('should sold all the tranches ', async function () {
-            const _bonuses = [50, 35, 20, 5, 0],   //rate of bonus for the current tranche
-                _valueForTranches = [4e8, 4e8, 4e8, 4e8, 4e8];
+            const _bonuses = [35, 20, 5, 0],   //rate of bonus for the current tranche
+                _valueForTranches = [6e8, 6e8, 6e8, 6e8];
             let trancheStrategy,
                 expectedTotalSaleTokens = 2000000000,
                 expectedFreeTokens = 0,
@@ -138,8 +138,8 @@ contract('TrancheStrategy', function ([_, investor, wallet, purchaser]) {
                 await trancheStrategy.soldInTranche(_valueForTranches[i]);
             }
 
-            let totalSaleTokens = await trancheStrategy.totalSaleTokens()
-            totalSaleTokens.should.be.bignumber.equal(expectedTotalSaleTokens)
+            let totalSoldTokens = await trancheStrategy.totalSoldTokens()
+            totalSoldTokens.should.be.bignumber.equal(expectedTotalSaleTokens)
             const log1 = await trancheStrategy.getFreeTokensInTranche(requireTokens)
             const event1 = log1.logs.find(e => e.event === 'AvalibleTokens')
             should.exist(event1)
@@ -149,8 +149,8 @@ contract('TrancheStrategy', function ([_, investor, wallet, purchaser]) {
         })
 
         it('should reject after sold of  all the tranches ', async function () {
-            const _bonuses = [50, 35, 20, 5, 0],   //rate of bonus for the current tranche
-                _valueForTranches = [4e8, 4e8, 4e8, 4e8, 4e8];
+            const _bonuses = [35, 20, 5, 0],   //rate of bonus for the current tranche
+                _valueForTranches = [6e8, 6e8, 6e8, 6e8];
             let trancheStrategy,
                 expectedTotalSaleTokens = 2000000000, 
                 testOverSaleToken = 1;
@@ -160,8 +160,8 @@ contract('TrancheStrategy', function ([_, investor, wallet, purchaser]) {
                 await trancheStrategy.soldInTranche(_valueForTranches[i]);
             }
 
-            let totalSaleTokens = await trancheStrategy.totalSaleTokens()
-            totalSaleTokens.should.be.bignumber.equal(expectedTotalSaleTokens)
+            let totalSoldTokens = await trancheStrategy.totalSoldTokens()
+            totalSoldTokens.should.be.bignumber.equal(expectedTotalSaleTokens)
             await trancheStrategy.soldInTranche(testOverSaleToken).should.be.rejectedWith(EVMThrow)
             
         })

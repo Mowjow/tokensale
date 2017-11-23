@@ -68,7 +68,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
             await this.mowjowCrowdsale.addWhitelistInvestors(investor)
 
             const { logs } = await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
-
+            console.log("logs", logs)
             const event = logs.find(e => e.event === 'PreIcoPurchase')
             should.exist(event)
             event.args.beneficiary.should.be.bignumber.equal(investor)
@@ -76,6 +76,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
             event.args.amount.should.be.bignumber.equal(expectedTokenAmount)
             const balance = await this.token.balanceOf(investor)
             balance.should.be.bignumber.equal(expectedTokenAmount)
+            console.log("nosold", await this.preIcoStrategy.getNotSoldTokens())
         })
 
         it('should reject after payment not from whitelist', async function () {

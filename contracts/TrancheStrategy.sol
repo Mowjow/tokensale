@@ -28,7 +28,7 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
     //events for testing
     event trancheSet(uint256 _tokenForTranchePeriod, uint256 _bonusForTranchePeriod);
     event AvalibleTokens(uint256 freeTokens, uint256 requireTokens, bool hasTokensForSale);
-    event TokenForInvestor(uint256 _token, uint256 _tokenAndBonus, uint256 indexOfperiod, uint256 bonus);
+    event TokenForInvestor(uint256 _token, uint256 _tokenAndBonus, uint256 indexOfperiod, uint256 bonusRate);
     event tokensSoldInTranche(uint256 _tokenForTranchePeriod, uint256 _tokenBonusForTranchePeriod, uint256 _bonusForTranchePeriod);
 
     mapping (uint256 => uint256) public tokenSoldInPeriod;

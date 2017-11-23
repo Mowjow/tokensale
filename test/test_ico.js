@@ -26,7 +26,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     const rate = new BigNumber(20000)
     const value = ether(0.0000000000000001)
 
-    const expectedTokenAmount = rate.mul(value)
+    const expectedTokenAmount = rate.mul(value).mul(1.5)
 
     before(async function () {
         //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
@@ -56,6 +56,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
         })
 
         it('should investor pay in first tranche', async function () { 
+            await this.mowjowCrowdsale.addWhitelistInvestors(investor)
             const { logs } = await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
 
             const event = logs.find(e => e.event === 'MowjowTokenPurchase')

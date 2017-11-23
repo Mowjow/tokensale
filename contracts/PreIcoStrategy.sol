@@ -16,7 +16,8 @@ contract  PreIcoStrategy {
     uint256 totalTokensForSale; 
 
     //events for testing  
-    event TokensForWhiteListInvestors(uint256 _token, uint256 _tokenAndBonus, uint256 bonus);  
+    event TokensForWhiteListInvestors(uint256 _token, uint256 _tokenAndBonus, uint256 bonusRate); 
+    event SoldTokensForWhiteListInvestors(uint256 soldTokensForPreIcoInvestor, uint256 totalPreIcoSoldTokens, uint256 totalPreIcoTokens);   
 
     /*
     * @dev Constructor
@@ -64,6 +65,10 @@ contract  PreIcoStrategy {
         return true;
     } 
 
+    function getNotSoldTokens() public returns (uint256) {         
+        return totalTokensForSale;
+    }
+
     function isNoEmptyPreIcoTranche() public returns (bool) {
         if ((totalTokensForSale - totalPreIcoSoldTokens) > 0) {
             return true;
@@ -77,5 +82,6 @@ contract  PreIcoStrategy {
     */ 
     function soldInTranche(uint256 tokensAndBonus) public {
         totalPreIcoSoldTokens += tokensAndBonus;
+        SoldTokensForWhiteListInvestors(tokensAndBonus, totalPreIcoSoldTokens, totalPreIcoSoldTokens); 
     }  
 }

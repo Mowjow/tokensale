@@ -12,19 +12,25 @@ import "./MowjowToken.sol";
 contract FinalizableMowjow is MowjowToken { 
 
     bool public isFinishedCrowdsale = false;
-    address public walletReserveFund; 
-    address public walletGrowsReserve;
-    address public walletGrowsFund;
+    address public multisigWallet;
+    //address public walletReserveFund; 
+    //address public walletGrowsReserve;
+    //address public walletGrowsFund;
     event MultisigFull(address _multisigWallet, uint256 _totalDistribution);
     
-    function doFinalization(uint256 tokensForDistribution, MowjowToken token, address multisigWallet) public returns(bool) { 
+    function FinalizableMowjow(address _multisigWallet) {
+        multisigWallet = _multisigWallet;
+    }
+
+    function doFinalization(uint256 tokensForDistribution, MowjowToken token) public returns(bool) { 
         require(!isFinishedCrowdsale);
         token.mint(multisigWallet, tokensForDistribution); 
         MultisigFull(multisigWallet, tokensForDistribution);
         isFinishedCrowdsale = true; 
         return isFinishedCrowdsale;
-    } 
-    function sendTokensToGroup(uint256 tokensForGroup, address walletOfGroup, MowjowToken token) internal returns(bool){
+    }
+
+    function sendTokensToGroup(uint256 tokensForGroup, address walletOfGroup, MowjowToken token) internal returns(bool) {
 
     }
 

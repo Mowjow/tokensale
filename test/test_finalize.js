@@ -18,8 +18,7 @@ const MowjowToken = artifacts.require('MowjowToken')
 const EarlyContribStrategy = artifacts.require("EarlyContribStrategy");
 const PreIcoStrategy = artifacts.require("PreIcoStrategy");
 const TrancheStrategy = artifacts.require('TrancheStrategy')
-const FinalizableMowjow = artifacts.require('FinalizableMowjow')
-const PreIcoMowjow = artifacts.require('PreIcoMowjow')
+const FinalizableMowjow = artifacts.require('FinalizableMowjow') 
 
 contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
     const cap = ether(0.1)
