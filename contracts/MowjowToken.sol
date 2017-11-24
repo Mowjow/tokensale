@@ -4,9 +4,8 @@ import "zeppelin-solidity/contracts/token/MintableToken.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol"; 
 import "zeppelin-solidity/contracts/math/Math.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./Vesting.sol";   
 
-contract MowjowToken is MintableToken, Vesting {
+contract MowjowToken is MintableToken {
 
     string public name = "MowjowToken";
     string public symbol = "MJT";
@@ -24,9 +23,9 @@ contract MowjowToken is MintableToken, Vesting {
         balances[msg.sender] = INITIAL_SUPPLY;
     }  
 
-    function transfer(address _to, uint256 _value) public onlyFinalized returns (bool) {       
-        return super.transfer(_to, _value);
-    } 
+    // function transfer(address _to, uint256 _value) public onlyFinalized returns (bool) {       
+    //     return super.transfer(_to, _value);
+    // } 
 
     function changeStatusFinalized() public onlyOwner {
         hasFinalized = true;

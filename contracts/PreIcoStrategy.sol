@@ -17,7 +17,7 @@ contract  PreIcoStrategy {
 
     //events for testing  
     event TokensForWhiteListInvestors(uint256 _token, uint256 _tokenAndBonus, uint256 bonusRate); 
-    event SoldTokensForWhiteListInvestors(uint256 soldTokensForPreIcoInvestor, uint256 totalPreIcoSoldTokens, uint256 totalPreIcoTokens);   
+    event SoldTokensForWhiteListInvestors(uint256 soldTokensForPreIcoInvestor, uint256 totalSoldPreIcoTokens, uint256 remainTokens);   
 
     /*
     * @dev Constructor
@@ -25,7 +25,7 @@ contract  PreIcoStrategy {
     */
     function PreIcoStrategy(uint256 _bonus, uint _maxCap) { 
         bonus = _bonus;
-        maxCap = _maxCap;        
+        totalTokensForSale = _maxCap;        
     }   
 
     /*
@@ -34,7 +34,8 @@ contract  PreIcoStrategy {
     */
     function setRate(uint256 _rate) public { 
         rate = _rate;
-        totalTokensForSale = maxCap.mul(rate);
+        //totalTokensForSale = maxCap.mul(rate);
+       // SoldTokensForWhiteListInvestors(totalTokensForSale, totalTokensForSale, totalTokensForSale);  
     } 
 
     /*
@@ -65,7 +66,7 @@ contract  PreIcoStrategy {
         return true;
     } 
 
-    function getNotSoldTokens() public returns (uint256) {         
+    function getNotSoldTokens() public returns (uint256) {      
         return totalTokensForSale;
     }
 
@@ -82,6 +83,7 @@ contract  PreIcoStrategy {
     */ 
     function soldInTranche(uint256 tokensAndBonus) public {
         totalPreIcoSoldTokens += tokensAndBonus;
-        SoldTokensForWhiteListInvestors(tokensAndBonus, totalPreIcoSoldTokens, totalPreIcoSoldTokens); 
+        totalTokensForSale -= tokensAndBonus;
+        SoldTokensForWhiteListInvestors(tokensAndBonus, totalPreIcoSoldTokens, getNotSoldTokens()); 
     }  
 }

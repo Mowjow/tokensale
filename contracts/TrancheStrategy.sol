@@ -11,7 +11,6 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
     uint256 public startTime;
     uint256 public rate;
     uint256 public totalSoldTokens = 0;
-    // uint public daysOfTranches;
 
     /*
     * Define bonus schedule of tranches.
