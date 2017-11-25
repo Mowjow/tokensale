@@ -1,19 +1,16 @@
 pragma solidity ^0.4.11; 
 
-
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
-import "./PrisingStrategy.sol";
+import "./PricingStrategy.sol";
 
-
-contract  PreIcoStrategy { 
+contract  PreIcoStrategy is PricingStrategy {
     using SafeMath for uint256;
 
-    uint256 public startTime;
     uint256 public rate;
     uint256 public totalPreIcoSoldTokens = 0;  
     uint256 bonus;
     uint256 maxCap;
-    uint256 totalTokensForSale; 
+    uint256 totalTokensForSale;
 
     //events for testing  
     event TokensForWhiteListInvestors(uint256 _token, uint256 _tokenAndBonus, uint256 bonusRate); 
@@ -23,19 +20,11 @@ contract  PreIcoStrategy {
     * @dev Constructor
     * @return uint256 Return rate of bonus for an investor
     */
-    function PreIcoStrategy(uint256 _bonus, uint _maxCap) { 
+    function PreIcoStrategy(uint256 _bonus, uint _maxCap, uint256 _rate) {
         bonus = _bonus;
-        maxCap = _maxCap;        
-    }   
-
-    /*
-    * @dev set parameters from the crowdsale 
-    * @return uint256 Return rate of bonus for an investor
-    */
-    function setRate(uint256 _rate) public { 
-        rate = _rate;
-        totalTokensForSale = maxCap.mul(rate);
-    } 
+        maxCap = _maxCap;
+        rate = rate;
+    }
 
     /*
     * @dev Fetch the rate of bonus
@@ -68,13 +57,9 @@ contract  PreIcoStrategy {
     function getNotSoldTokens() public returns (uint256) {         
         return totalTokensForSale;
     }
-
     function isNoEmptyPreIcoTranche() public returns (bool) {
-        if ((totalTokensForSale - totalPreIcoSoldTokens) > 0) {
-            return true;
-        } else {
-            return false;
-        }
+        uint availableTokens = totalTokensForSale - totalPreIcoSoldTokens;
+        return availableTokens > 0;
     }
      
     /*
@@ -83,5 +68,9 @@ contract  PreIcoStrategy {
     function soldInTranche(uint256 tokensAndBonus) public {
         totalPreIcoSoldTokens += tokensAndBonus;
         SoldTokensForWhiteListInvestors(tokensAndBonus, totalPreIcoSoldTokens, totalPreIcoSoldTokens); 
-    }  
+    }
+
+    //function setTranche(uint256[] _bonuses, uint[] _valueForTranches) public returns(bool);
+    //function countTokens(uint256 _value) public returns (uint256 tokensAndBonus);
+    //function isTrancheSet() internal constant returns (bool);
 }

@@ -1,24 +1,24 @@
-pragma solidity ^0.4.11; 
+pragma solidity ^0.4.11;
 
-import "zeppelin-solidity/contracts/token/MintableToken.sol"; 
+import "zeppelin-solidity/contracts/token/MintableToken.sol";
 import "zeppelin-solidity/contracts/crowdsale/FinalizableCrowdsale.sol";
-import "zeppelin-solidity/contracts/ownership/Ownable.sol"; 
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol"; 
 import "./MowjowToken.sol";
 import "./TrancheStrategy.sol";
-import "./FinalizableMowjow.sol"; 
+import "./FinalizableMowjow.sol";
 import "./EarlyContribStrategy.sol";
 import "./PreIcoStrategy.sol";
 
 
 contract MowjowCrowdsale is FinalizableCrowdsale {
 
-    using SafeMath for uint256; 
+    using SafeMath for uint256;
 
-    // The token being sold
+    uint256 public cap;
+
     MowjowToken mowjowToken;    
     FinalizableMowjow public finalizableMowjow;
-    uint256 cap;
     //address public walletMultisig = 0x12345;
     TrancheStrategy trancheStrategy; 
     EarlyContribStrategy earlyContribStrategy; 
@@ -27,11 +27,11 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     address[] public whitelistInvestors; 
 
     /** State machine    
-    * - Prefunding: We have not passed start time yet
+    * - PreFunding: We have not passed start time yet
     * - Funding: Active crowdsale
     * - Finalized: The finalized has been called and succesfully executed
     */
-    enum State{PreFunding, Funding, Finalized}
+    enum State {PreFunding, Funding, Finalized}
 
     /*
     * event for token purchase logging
@@ -40,9 +40,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     * @param value weis paid for purchase
     * @param amount amount of tokens purchased
     */
-    event MowjowTokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
-    event PreIcoPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount); 
-    event EarlyContribPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);  
+    event Purchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
     /*
     * @dev The constructor function to initialize the token related properties
@@ -53,16 +51,17 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     * @param _cap       uint256     Specifies total count of tokens
     */
     function MowjowCrowdsale(
-        uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap, EarlyContribStrategy _earlyContribStrategy,
-        PreIcoStrategy _preIcoStrategy, TrancheStrategy _trancheStrategy, FinalizableMowjow _finalizableMowjow
-        ) Crowdsale(_startTime, _endTime, _rate, _wallet) {
+        uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap,
+        EarlyContribStrategy _earlyContribStrategy, PreIcoStrategy _preIcoStrategy,
+        TrancheStrategy _trancheStrategy, FinalizableMowjow _finalizableMowjow
+        ) Crowdsale(_startTime, _endTime, 1, _wallet) { // We don't need rate as we are using PricingStrategies
+
+        require(_cap > 0);
+
         finalizableMowjow = _finalizableMowjow;
         trancheStrategy = _trancheStrategy;
         preIcoStrategy = _preIcoStrategy;
-        earlyContribStrategy = _earlyContribStrategy; 
-        trancheStrategy.setRate(_rate);
-        preIcoStrategy.setRate(_rate); 
-        earlyContribStrategy.setRate(_rate);
+        earlyContribStrategy = _earlyContribStrategy;
         cap = _cap;
     }
 
@@ -78,59 +77,82 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         earlyContribStrategy = strategy;
     }
 
+    function() payable {
+        throw;
+    }
+
+    event IsOk(bool ok);
     /*
-    * @dev This method have  overrided  from  crowdsale
+    * @dev This method has been overridden  from  crowdsale
     */ 
     function buyTokens(address beneficiary) public payable {
-        require(beneficiary != 0x0);
-        uint256 weiAmount = msg.value; 
-        if (getState() == State.PreFunding) {
-            //preIco  
-            require(isWhitelistInvestors(beneficiary));
-            weiRaised = weiRaised.add(weiAmount);
-            uint256 requireTokens = preIcoStrategy.countTokens(msg.value);
-            require(preIcoStrategy.getFreeTokensInTranche(requireTokens)); 
-            mowjowToken.mint(beneficiary, requireTokens);
-            preIcoStrategy.soldInTranche(requireTokens); 
-            PreIcoPurchase(msg.sender, beneficiary, msg.value, requireTokens); 
-                               
-        } else if (getState() == State.Funding) {
-            //ico
-            require(validPurchase());    
-            weiRaised = weiRaised.add(weiAmount); 
-            uint256 tokensAndBonus = trancheStrategy.countTokens(msg.value); 
-            mowjowToken.mint(beneficiary, tokensAndBonus);  
-            MowjowTokenPurchase(msg.sender, beneficiary, weiAmount, tokensAndBonus); 
-        }
-        forwardFunds();        
-    } 
 
-    // overriding Crowdsale#hasEnded to add cap logic
-    // @return true if crowdsale event has ended
-    function hasEnded() public constant returns (bool) {
-        //require(!preIcoStrategy.isNoEmptyPreIcoTranche());
-        bool capReached = weiRaised >= cap; 
-        return super.hasEnded() || capReached;// || noOverCap;
-    } 
+        require(beneficiary != 0x0);
+        require(msg.value > 0);
+
+        State currentState = getState();
+        IsOk(true);
+        PricingStrategy strategy;
+        IsOk(true);
+        bool isValid = true;
+
+//        if(currentState == State.PreFunding) {
+//            isValid = isInList(beneficiary, whitelistInvestors);
+//            strategy = preIcoStrategy;
+//        } else if(currentState == State.Funding) {
+//            isValid = validPurchase();
+//            strategy = trancheStrategy;
+//        }
+//
+//        require(isValid);
+//
+        weiRaised = weiRaised.add(msg.value);
+        uint256 tokensAmount = preIcoStrategy.countTokens(msg.value);
+        mowjowToken.mint(beneficiary, tokensAmount);
+//
+//        Purchase(msg.sender, beneficiary, msg.value, tokensAmount);
+        forwardFunds();
+    }
 
     /**
-    * Crowdfund state machine management.    
+    *   overriding Crowdsale hasEnded to add cap logic
+    *   @return true if crowdsale event has ended
+    */
+    function hasEnded() public constant returns (bool) {
+        bool capReached = weiRaised >= cap;
+        return super.hasEnded() || capReached;
+    }
+
+    /**
+    * Crowdsale state machine management.
     */
     function getState() public constant returns (State) {
-        if (isFinalized) return State.Finalized;   
-        else if (preIcoStrategy.isNoEmptyPreIcoTranche()) return State.PreFunding;
-        else if (trancheStrategy.isNoEmptyTranches()) return State.Funding;  
+
+        if (isFinalized) {
+            return State.Finalized;
+        }
+        else if (preIcoStrategy.isNoEmptyPreIcoTranche()) {
+            return State.PreFunding;
+        }
+        else if (trancheStrategy.isNoEmptyTranches()) {
+            return State.Funding;
+        }
     }
 
     function addEarlyContributors(address investor, uint256 payments) public onlyOwner {
-        require((getState() == State.PreFunding));
-        uint256 requireTokens = earlyContribStrategy.countTokens(payments);
-        require(earlyContribStrategy.getFreeTokensInTranche(requireTokens));
-        mowjowToken.mint(investor, requireTokens);
-        earlyContribStrategy.soldInTranche(requireTokens);
-        earlyContributors.push(investor);  
-        EarlyContribPurchase(msg.sender, investor, payments, requireTokens); 
-        
+        bool inList = isInList(investor, earlyContributors);
+        require(!inList);
+
+        State currentState = getState();
+        require(currentState == State.PreFunding);
+
+        uint256 tokensAmount = earlyContribStrategy.countTokens(payments);
+        bool contrib = earlyContribStrategy.getFreeTokensInTranche(tokensAmount);
+        require(contrib);
+
+        mowjowToken.mint(investor, tokensAmount);
+        earlyContributors.push(investor);
+        Purchase(msg.sender, investor, payments, tokensAmount);
     }
 
     function addWhitelistInvestors(address investor) public onlyOwner {
@@ -139,61 +161,46 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     }
 
     /*
-    * @dev Check the  
-    * @return true if  
-    */ 
-    function isWhitelistInvestors(address preIcoInvestor) internal constant returns (bool) {
-        require((getState() == State.PreFunding));
-        bool hasInvestor = false;
-        for (uint256 i = 0; i < whitelistInvestors.length; i++) {
-            if (whitelistInvestors[i] == preIcoInvestor) {
-                hasInvestor = true;
-            }
-        } 
-        return hasInvestor;    
-    }
+    * @dev Check if address is in early contributors
+    * @return boolean
+    */
 
-     /*
-    * @dev Check the  
-    * @return true if  
-    */ 
-    function isEarlyContributors(address earlyInvestor) internal constant returns (bool) {
-        require((getState() == State.PreFunding));
-        require(earlyInvestor != 0);
+    function isInList(address investor, address[] list) internal constant returns (bool) {
+        State state = getState();
+        require(state == State.PreFunding);
+        require(investor != 0);
+
         bool hasInvestor = false;
-        for (uint256 i = 0; i < earlyContributors.length; i++) {
-            if (earlyContributors[i] == earlyInvestor) {
+        for (uint256 i = 0; i < list.length; i++) {
+            if (list[i] == investor) {
                 hasInvestor = true;
             }
-        } 
-        return hasInvestor;    
+        }
+
+        return hasInvestor;
     }
     
     /*
     * @dev Check the sale period is still and investor's amount no zero
-    * @return true if the transaction can buy tokens
+    * @return boolean
     */ 
     function validPurchase() internal constant returns (bool) { 
         require(msg.value != 0);
-        // uint256 requireTokens = msg.value.mul(rate); 
-        // trancheStrategy.getFreeTokensInTranche(requireTokens);
-        //require(trancheStrategy.getFreeTokensInTranche(requireTokens)); 
         require(!hasEnded()); 
         return true; 
     }    
 
     /*
     * @dev Creates the token to be sold.
-    * override this method to have crowdsale of a specific MowjowToken token.
-    * @return MintableToken 
+    * @returns MintableToken
     */
     function createTokenContract() internal returns (MintableToken) {
-        mowjowToken = new MowjowToken(); 
+        mowjowToken = new MowjowToken('MowjowToken', 'MJT', 18, 75 * 1e8);
+
         return mowjowToken;
     }
 
     // send ether to the fund collection wallet
-    // override to create custom fund forwarding mechanisms
     function forwardFunds() internal {
         wallet.transfer(msg.value);
     }
@@ -205,22 +212,22 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     */
     function finalization() internal { 
         mowjowToken.changeStatusFinalized();
-        uint256 totalTokens =  mowjowToken.INITIAL_SUPPLY();
-        uint256 eContrTok =  earlyContribStrategy.totalSoldTokens();
-        uint256 preIcoTok =  preIcoStrategy.totalPreIcoSoldTokens();
-        uint256 tranchTok = trancheStrategy.totalSoldTokens();
-        //require(!earlyContribStrategy.getFreeTokensInTranche(requireTokens));
-        uint256 teamTok = totalTokens.div(10);
-        uint256 rewEngTok = totalTokens.div(20);
-        uint256 reserveFundTok;
-
-        //calculate tokens for reserve fund
-        reserveFundTok = totalTokens.sub(eContrTok);
-        reserveFundTok = reserveFundTok.sub(preIcoTok);
-        reserveFundTok = reserveFundTok.sub(tranchTok);
-        reserveFundTok = reserveFundTok.sub(teamTok);
-        reserveFundTok = reserveFundTok.sub(rewEngTok); 
-        require(finalizableMowjow.doFinalization(reserveFundTok, mowjowToken)); 
+//        uint256 totalTokens =  mowjowToken.INITIAL_SUPPLY();
+//        uint256 eContrTok =  earlyContribStrategy.totalSoldTokens();
+//        uint256 preIcoTok =  preIcoStrategy.totalPreIcoSoldTokens();
+//        uint256 tranchTok = trancheStrategy.totalSoldTokens();
+//        //require(!earlyContribStrategy.getFreeTokensInTranche(requireTokens));
+//        uint256 teamTok = totalTokens.div(10);
+//        uint256 rewEngTok = totalTokens.div(20);
+//        uint256 reserveFundTok;
+//
+//        //calculate tokens for reserve fund
+//        reserveFundTok = totalTokens.sub(eContrTok);
+//        reserveFundTok = reserveFundTok.sub(preIcoTok);
+//        reserveFundTok = reserveFundTok.sub(tranchTok);
+//        reserveFundTok = reserveFundTok.sub(teamTok);
+//        reserveFundTok = reserveFundTok.sub(rewEngTok);
+//        require(finalizableMowjow.doFinalization(reserveFundTok, mowjowToken));
     }
      
 }

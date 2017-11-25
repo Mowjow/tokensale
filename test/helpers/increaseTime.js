@@ -36,7 +36,7 @@ exports.increaseTimeTo = (target) => {
   if (target < now) throw Error(`Cannot increase current time(${now}) to a moment in the past(${target})`);
   let diff = target - now;
   return increaseTime(diff);
-}
+};
 
 
 const duration = {

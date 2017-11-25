@@ -2,10 +2,10 @@ pragma solidity ^0.4.11;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
-import "./PrisingStrategy.sol";
+import "./PricingStrategy.sol";
 
 
-contract  TrancheStrategy is PrisingStrategy, Ownable { 
+contract  TrancheStrategy is PricingStrategy, Ownable {
     using SafeMath for uint256;
 
     uint256 public startTime;
@@ -58,12 +58,11 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
     */
     function countTokens(uint256 _value) public returns (uint256 tokensAndBonus) {  
         uint indexOfTranche = defineTranchePeriod();
-         
         uint256 bonusRate = tranches[indexOfTranche].bonus;   
-        //TokenForInvestor(_value, tokensAndBonus, indexOfTranche, bonusRate);
+
         // calculate token amount without bonus
         uint256 tokens = _value.mul(rate); 
-        //require(getFreeTokensInTranche(tokens)); 
+        require(getFreeTokensInTranche(tokens));
 
         // calculate bonus 
         uint256 bonusToken = tokens.mul(bonusRate).div(100); 
@@ -86,15 +85,15 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
             
         } else {
             hasTokens = false;
-        }   
+        }
         AvalibleTokens(tranches[indexOfTranche].valueForTranche, requiredTokens, hasTokens);     
         return hasTokens;
     }
 
     /*
     * @dev set parameters of a tranche 
-    * @return uint256 sum 
-    */ 
+    * @return uint256 sum
+    */
     function countRemainingTokens() public returns (uint256 remainingTokens) {
         for (uint i = 0; i < tranches.length; i++) {
             remainingTokens += tranches[i].valueForTranche;
@@ -103,14 +102,14 @@ contract  TrancheStrategy is PrisingStrategy, Ownable {
     }
 
     /*
-    * @dev summing sold of tokens  
-    */ 
+    * @dev Sum of sold tokens
+    */
     function soldInTranche(uint256 tokensAndBonus) public {
         uint256 indexOfTranche = defineTranchePeriod();
         require(tranches[indexOfTranche].valueForTranche >= tokensAndBonus);
-        tranches[indexOfTranche].valueForTranche.sub(tokensAndBonus); 
+        tranches[indexOfTranche].valueForTranche.sub(tokensAndBonus);
         totalSoldTokens.add(tokensAndBonus);
-    } 
+    }
 
     function isNoEmptyTranches() public returns(bool) {
         uint256 sumFreeTokens = 0;
