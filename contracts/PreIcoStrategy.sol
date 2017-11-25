@@ -14,7 +14,7 @@ contract  PreIcoStrategy is PricingStrategy {
 
     //events for testing  
     event TokensForWhiteListInvestors(uint256 _token, uint256 _tokenAndBonus, uint256 bonusRate); 
-    event SoldTokensForWhiteListInvestors(uint256 soldTokensForPreIcoInvestor, uint256 totalPreIcoSoldTokens, uint256 totalPreIcoTokens);   
+    event SoldTokensForWhiteListInvestors(uint256 soldTokensForPreIcoInvestor, uint256 totalSoldPreIcoTokens, uint256 remainTokens);   
 
     /*
     * @dev Constructor
@@ -24,6 +24,15 @@ contract  PreIcoStrategy is PricingStrategy {
         bonus = _bonus;
         maxCap = _maxCap;
         rate = rate;
+        totalTokensForSale = _maxCap;
+    }
+
+    /*
+    * @dev set parameters from the crowdsale 
+    * @return uint256 Return rate of bonus for an investor
+    */
+    function setRate(uint256 _rate) public { 
+        rate = _rate;
     }
 
     /*
@@ -54,7 +63,7 @@ contract  PreIcoStrategy is PricingStrategy {
         return true;
     } 
 
-    function getNotSoldTokens() public returns (uint256) {         
+    function getNotSoldTokens() public returns (uint256) {      
         return totalTokensForSale;
     }
     function isNoEmptyPreIcoTranche() public returns (bool) {
@@ -67,10 +76,7 @@ contract  PreIcoStrategy is PricingStrategy {
     */ 
     function soldInTranche(uint256 tokensAndBonus) public {
         totalPreIcoSoldTokens += tokensAndBonus;
-        SoldTokensForWhiteListInvestors(tokensAndBonus, totalPreIcoSoldTokens, totalPreIcoSoldTokens); 
+        totalTokensForSale -= tokensAndBonus;
+        SoldTokensForWhiteListInvestors(tokensAndBonus, totalPreIcoSoldTokens, getNotSoldTokens()); 
     }
-
-    //function setTranche(uint256[] _bonuses, uint[] _valueForTranches) public returns(bool);
-    //function countTokens(uint256 _value) public returns (uint256 tokensAndBonus);
-    //function isTrancheSet() internal constant returns (bool);
 }

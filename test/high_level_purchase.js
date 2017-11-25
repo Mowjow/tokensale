@@ -50,44 +50,43 @@
 //         this.token = MowjowToken.at(await this.mowjowCrowdsale.token())
 //     })
 
+//     describe('high-level purchase', function () {
 
-//   describe('low-level purchase', function () {
+//         beforeEach(async function () {
+//             await increaseTimeTo(this.startTime)
+//         })
 
-//     beforeEach(async function () {
-//       await increaseTimeTo(this.startTime)
+//         it('should log purchase', async function () {
+//             await increaseTimeTo(this.startTime)
+//             const { logs } = await this.mowjowCrowdsale.sendTransaction({ value: value, from: investor })
+
+//             const event = logs.find(e => e.event === 'MowjowTokenPurchase')
+
+//             should.exist(event)
+//             event.args.purchaser.should.equal(investor)
+//             event.args.beneficiary.should.equal(investor)
+//             event.args.value.should.be.bignumber.equal(value)
+//             event.args.amount.should.be.bignumber.equal(expectedTokenAmount)
+//         })
+
+//         it('should increase totalSupply', async function () {
+//             let initBalance = await this.token.totalSupply();
+//             await this.mowjowCrowdsale.send(value)
+//             const totalSupply = await this.token.totalSupply()
+//             totalSupply.should.be.bignumber.equal(initBalance.add(expectedTokenAmount))
+//         })
+
+//         it('should assign tokens to sender', async function () {
+//             await this.mowjowCrowdsale.sendTransaction({ value: value, from: investor })
+//             let balance = await this.token.balanceOf(investor);
+//             balance.should.be.bignumber.equal(expectedTokenAmount)
+//         })
+
+//         it('should forward funds to wallet', async function () {
+//             const pre = web3.eth.getBalance(wallet)
+//             await this.mowjowCrowdsale.sendTransaction({ value, from: investor })
+//             const post = web3.eth.getBalance(wallet)
+//             post.minus(pre).should.be.bignumber.equal(value)
+//         })
 //     })
-
-//     it('should log purchase', async function () {
-//       const { logs } = await this.mowjowCrowdsale.buyTokens(investor, { value: value, from: purchaser })
-
-//       const event = logs.find(e => e.event === 'MowjowTokenPurchase')
-
-//       should.exist(event)
-//       event.args.purchaser.should.equal(purchaser)
-//       event.args.beneficiary.should.equal(investor)
-//       event.args.value.should.be.bignumber.equal(value)
-//       event.args.amount.should.be.bignumber.equal(expectedTokenAmount)
-//     })
-
-//     it('should increase totalSupply', async function () {
-//       let initBalance = await this.token.totalSupply();
-//       await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
-//       const totalSupply = await this.token.totalSupply()
-//       totalSupply.should.be.bignumber.equal(initBalance.add(expectedTokenAmount))
-//     })
-
-//     it('should assign tokens to beneficiary', async function () {
-//       await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
-//       const balance = await this.token.balanceOf(investor)
-//       balance.should.be.bignumber.equal(expectedTokenAmount)
-//     })
-
-//     it('should forward funds to wallet', async function () {
-//       const pre = web3.eth.getBalance(wallet)
-//       await this.mowjowCrowdsale.buyTokens(investor, { value, from: purchaser })
-//       const post = web3.eth.getBalance(wallet)
-//       post.minus(pre).should.be.bignumber.equal(value)
-//     })
-
-//   })
 // })

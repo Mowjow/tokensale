@@ -5,23 +5,20 @@ var HDWalletProvider = require("truffle-hdwallet-provider");
 
 module.exports = {
   networks: {
-    development: {
+    ropsten: {
+      provider: function () {
+        return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/");
+      },
+      network_id: '3',
+      // gas: 4712388,
+      // gasLimit: 5000000,
+      // gasPrice: 100000000000,
+      // from: "0xC16Cd2dd3EA77B0eC4CdFd98ABF22013B4d33999"
+    },
+    rpc: {
       host: "localhost",
       port: 8545,
-      network_id: "*" // Match any network id
-    },    
-      staging: {
-        host: "localhost",
-        port: 8546,
-        network_id: 1337
-      },
-    ropsten: { 
-      network_id: 3, 
-      provider: new HDWalletProvider(mnemonic, "https://ropsten.infura.io/"), // Use our custom provider
-      gas: 500000000,
-      gasLimit: 500000,
-      gasPrice: 100000//,
-      //from: "0xC16Cd2dd3EA77B0eC4CdFd98ABF22013B4d33999"
-    }
-  } 
+      network_id: "*"
+    },
+  }
 };
