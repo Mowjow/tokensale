@@ -10,11 +10,9 @@ contract  PreIcoStrategy is PricingStrategy {
     uint256 public totalPreIcoSoldTokens = 0;  
     uint256 bonus;
     uint256 maxCap;
-    uint256 totalTokensForSale;
 
     //events for testing  
-    event TokensForWhiteListInvestors(uint256 _token, uint256 _tokenAndBonus, uint256 bonusRate); 
-    event SoldTokensForWhiteListInvestors(uint256 soldTokensForPreIcoInvestor, uint256 totalSoldPreIcoTokens, uint256 remainTokens);   
+    event TokensForWhiteListInvestors(uint256 _token, uint256 _tokenAndBonus, uint256 bonusRate);
 
     /*
     * @dev Constructor
@@ -23,8 +21,7 @@ contract  PreIcoStrategy is PricingStrategy {
     function PreIcoStrategy(uint256 _bonus, uint _maxCap, uint256 _rate) {
         bonus = _bonus;
         maxCap = _maxCap;
-        rate = rate;
-        totalTokensForSale = _maxCap;
+        rate = _rate;
     }
 
     /*
@@ -41,34 +38,31 @@ contract  PreIcoStrategy is PricingStrategy {
     */
     function countTokens(uint256 _value) public returns (uint256 tokensAndBonus) {   
          
-        uint256 tokens = _value.mul(rate); 
-        require(getFreeTokensInTranche(tokens)); 
-
-        // calculate bonus 
-        uint256 bonusToken = tokens.mul(bonus).div(100); 
-        
-        // total tokens amount to be created
+        uint256 tokens = _value.mul(rate);
+        uint256 bonusToken = tokens.mul(bonus).div(100);
         tokensAndBonus = tokens.add(bonusToken);
-         
-        TokensForWhiteListInvestors(tokens, tokensAndBonus, rate); 
-        return tokensAndBonus; 
+
+        require(getFreeTokensInTranche(tokens));
+
+        TokensForWhiteListInvestors(tokens, tokensAndBonus, rate);
+        return tokensAndBonus;
     }  
 
     /*
     * @dev Check  
     * @return true if the transaction can buy tokens
     */ 
-    function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool) { 
-        require((totalTokensForSale - totalPreIcoSoldTokens) > requiredTokens);
-        return true;
+    function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool) {
+        return (maxCap - totalPreIcoSoldTokens) > 0;
     } 
 
     function getNotSoldTokens() public returns (uint256) {      
-        return totalTokensForSale;
+        return maxCap - totalPreIcoSoldTokens;
     }
+
     function isNoEmptyPreIcoTranche() public returns (bool) {
-        uint availableTokens = totalTokensForSale - totalPreIcoSoldTokens;
-        return availableTokens > 0;
+        uint availableTokens = maxCap - totalPreIcoSoldTokens;
+        return availableTokens > 0 || now <= endTime;
     }
      
     /*
@@ -76,7 +70,5 @@ contract  PreIcoStrategy is PricingStrategy {
     */ 
     function soldInTranche(uint256 tokensAndBonus) public {
         totalPreIcoSoldTokens += tokensAndBonus;
-        totalTokensForSale -= tokensAndBonus;
-        SoldTokensForWhiteListInvestors(tokensAndBonus, totalPreIcoSoldTokens, getNotSoldTokens()); 
     }
 }

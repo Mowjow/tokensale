@@ -22,7 +22,7 @@ contract MowjowToken is MintableToken {
         hasFinalized = false;
     }
 
-    function transfer(address _to, uint256 _value) public onlyFinalized returns (bool) {       
+    function transfer(address _to, uint256 _value) public onlyFinalized returns (bool) {
         return super.transfer(_to, _value);
     }
 

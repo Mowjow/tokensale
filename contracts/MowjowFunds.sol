@@ -10,7 +10,13 @@ contract  MowjowFunds is Ownable {
     mapping(uint => uint256) public balancesOfFunds; 
     event AddedBalanceToFund(uint numberFund, uint256 addedTokens, uint256 sumTokensFund);
     event SentFromFund(uint numberFund, address destination, uint256  sentTokens, uint256 sumTokensFund);
-    event fail(string fail);
+
+    modifier fundHasAmount(uint numberOfFund, uint256 amount) {
+        bool has = balancesOfFunds[numberOfFund] >= amount;
+        require(has);
+        _;
+    }
+
     function MowjowFunds() {
         
     }
@@ -20,11 +26,10 @@ contract  MowjowFunds is Ownable {
         AddedBalanceToFund(numberOfFund, amount, balancesOfFunds[numberOfFund]);
     }
 
-    function transferToFund(address destinationAddress, uint numberFund, uint256 amount, MowjowToken token) public onlyOwner {
-        require(balancesOfFunds[numberFund] >= amount); 
-        SentFromFund(numberFund, destinationAddress, amount, balancesOfFunds[numberFund]);
-        token.transfer(destinationAddress, amount);       
-        balancesOfFunds[numberFund] -= amount;
-        SentFromFund(numberFund, destinationAddress, amount, balancesOfFunds[numberFund]);
-    }    
+    function transferToFund(address destinationAddress, uint numberOfFund,
+        uint256 amount, MowjowToken token) public onlyOwner fundHasAmount(numberOfFund, amount) {
+        token.transfer(destinationAddress, amount);
+        balancesOfFunds[numberOfFund] -= amount;
+        SentFromFund(numberOfFund, destinationAddress, amount, balancesOfFunds[numberOfFund]);
+    }
 }

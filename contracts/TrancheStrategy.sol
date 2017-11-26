@@ -1,14 +1,13 @@
-pragma solidity ^0.4.11;  
+pragma solidity ^0.4.11;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./PricingStrategy.sol";
 
 
 contract  TrancheStrategy is PricingStrategy, Ownable {
     using SafeMath for uint256;
 
-    uint256 public startTime;
     uint256 public rate;
     uint256 public totalSoldTokens = 0;
 
@@ -41,15 +40,15 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
     */
     function TrancheStrategy(uint256[] _bonuses, uint[] _valueForTranches) { 
        require(setTranche(_bonuses, _valueForTranches));
-    }   
+    }
 
     /*
     * @dev set parameters from the crowdsale 
     * @return uint256 Return rate of bonus for an investor
     */
-    function setRate(uint256 _rate) public { 
+    function setRate(uint256 _rate) public onlyOwner {
         rate = _rate;
-    } 
+    }
 
     /*
     * @dev Fetch the rate of bonus
@@ -78,13 +77,9 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
     */ 
     function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool) {
         bool hasTokens = false;
-        uint256 indexOfTranche = defineTranchePeriod(); 
-        if (tranches[indexOfTranche].valueForTranche > requiredTokens) { 
-            hasTokens = true;
-            
-        } else {
-            hasTokens = false;
-        }
+        uint256 indexOfTranche = defineTranchePeriod();
+        hasTokens = tranches[indexOfTranche].valueForTranche > requiredTokens;
+
         AvalibleTokens(tranches[indexOfTranche].valueForTranche, requiredTokens, hasTokens);     
         return hasTokens;
     }
@@ -115,11 +110,8 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
         for (uint i = 0; i < tranches.length; i++) {
             sumFreeTokens.add(tranches[i].valueForTranche);
         }
-        if (sumFreeTokens > 0) {
-            return true;
-        } else {
-            return false;
-        }
+        bool isValid = sumFreeTokens > 0 && now <= endTime;
+        return isValid;
     }
 
     /*
@@ -132,11 +124,7 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
                 tranches.push(BonusSchedule({bonus: _bonuses[i], valueForTranche: _valueForTranches[i]}));
             }
         }
-        if (tranches.length == _bonuses.length) {
-            return true;
-        } else {
-            return false;
-        }  
+        return tranches.length == _bonuses.length;
     } 
 
     // /
@@ -150,7 +138,7 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
                 return i; 
             }            
         } 
-    } 
+    }
 
     /**
     * @dev Check working tranche

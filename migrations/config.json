@@ -1,4 +1,15 @@
-[{
+{
+
+    "early_contributors": {
+        "token_cap": 60000000,
+        "rate": 40000,
+        "bonus": 100
+    },
+    "pre_ico": {
+        "token_cap": 60000000,
+        "rate": 40000,
+        "bonus": 100
+    },
     "bonusesIco": [35, 20, 5, 0],
     "valueForTranches": [6e8, 6e8, 6e8, 6e8],
     "bonusPreIco": 50,
@@ -7,4 +18,4 @@
     "valueEarlyContrib": 1e8,
     "gasValue": { "gas": 4700000 },
     "countOfOvners": 6    
-}]
+}

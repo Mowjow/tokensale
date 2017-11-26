@@ -15,6 +15,7 @@ contract  EarlyContribStrategy is PricingStrategy {
 
     /*
     * @dev Constructor
+    * // MAX CAP IN TOKENS ETC
     * @return uint256 Return rate of bonus for an investor
     */
     function EarlyContribStrategy(uint256 _bonus, uint _maxCap, uint _rate) public {
@@ -28,37 +29,34 @@ contract  EarlyContribStrategy is PricingStrategy {
     * @dev set parameters from the crowdsale
     * @return uint256 Return rate of bonus for an investor
     */
-    function setRate(uint256 _rate) public { 
+    function setRate(uint256 _rate) public {
         rate = _rate;
     }
 
+    event Test(bool);
     /*
     * @dev Fetch the rate of bonus
     * @return uint256 Return rate of bonus for an investor
     */
-    function countTokens(uint256 _value) public returns (uint256 tokensAndBonus) {
+    function countTokens(uint256 _value) public returns (uint256) {
 
         uint256 tokens = _value.mul(rate);
-        bool isFree = getFreeTokensInTranche(tokens);
-        require(isFree);
-
         uint256 bonusToken = tokens.mul(bonus).div(100);
 
-        tokensAndBonus = tokens.add(bonusToken);
-        soldInTranche(tokensAndBonus);
+        uint256 totalTokens = tokens.add(bonusToken);
 
-        return tokensAndBonus; 
+        getFreeTokensInTranche(totalTokens);
+
+        return totalTokens;
     }
 
     /*
     * @dev Check  
     * @return true if the transaction can buy tokens
     */ 
-    function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool) { 
-        uint256 totalTokensForSale = maxCap.mul(rate);
-        uint256 remainingTokens = totalTokensForSale - totalSoldTokens;
+    function getFreeTokensInTranche(uint256 requiredTokens) public {
+        uint256 remainingTokens = maxCap - totalSoldTokens;
         require(remainingTokens > requiredTokens);
-        return true;
     }
 
     /*
@@ -66,5 +64,5 @@ contract  EarlyContribStrategy is PricingStrategy {
     */
     function soldInTranche(uint256 tokensAndBonus) public {
         totalSoldTokens += tokensAndBonus;
-    }  
+    }
 }

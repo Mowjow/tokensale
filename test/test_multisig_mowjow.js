@@ -87,7 +87,7 @@
             
 //         })
 
-//         it('should reject with no ovner address', async function () { 
+//         it('should reject with no owner address', async function () {
 //             await this.multiSigMowjow.send(value, { from: purchaser })
 //             await this.multiSigMowjow.submitTransaction(resiver, .00000001, "0x4bb278f3", {from: noOvner}).should.be.rejectedWith(EVMThrow)  
 //         })

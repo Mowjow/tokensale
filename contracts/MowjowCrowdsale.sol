@@ -19,10 +19,10 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
     MowjowToken mowjowToken;    
     FinalizableMowjow public finalizableMowjow;
-    //address public walletMultisig = 0x12345;
     TrancheStrategy trancheStrategy; 
     EarlyContribStrategy earlyContribStrategy; 
     PreIcoStrategy preIcoStrategy;
+
     address[] public earlyContributors;
     address[] public whitelistInvestors; 
 
@@ -31,7 +31,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     * - Funding: Active crowdsale
     * - Finalized: The finalized has been called and succesfully executed
     */
-    enum State {PreFunding, Funding, Finalized}
+    enum State {PreFunding, Funding, Finalized, Ended}
 
     /*
     * event for token purchase logging
@@ -54,7 +54,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap,
         EarlyContribStrategy _earlyContribStrategy, PreIcoStrategy _preIcoStrategy,
         TrancheStrategy _trancheStrategy, FinalizableMowjow _finalizableMowjow
-        ) Crowdsale(_startTime, _endTime, 1, _wallet) { // We don't need rate as we are using PricingStrategies
+        ) Crowdsale(_startTime, _endTime, 1, _wallet) {
 
         require(_cap > 0);
 
@@ -62,6 +62,10 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         trancheStrategy = _trancheStrategy;
         preIcoStrategy = _preIcoStrategy;
         earlyContribStrategy = _earlyContribStrategy;
+
+        trancheStrategy.setEndDate(endTime);
+        preIcoStrategy.setEndDate(endTime);
+
         cap = _cap;
     }
 
@@ -96,21 +100,21 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         IsOk(true);
         bool isValid = true;
 
-//        if(currentState == State.PreFunding) {
-//            isValid = isInList(beneficiary, whitelistInvestors);
-//            strategy = preIcoStrategy;
-//        } else if(currentState == State.Funding) {
-//            isValid = validPurchase();
-//            strategy = trancheStrategy;
-//        }
-//
-//        require(isValid);
-//
+        if(currentState == State.PreFunding) {
+            isValid = isInList(beneficiary, whitelistInvestors);
+            strategy = preIcoStrategy;
+        } else if(currentState == State.Funding) {
+            isValid = validPurchase();
+            strategy = trancheStrategy;
+        }
+
+        require(isValid);
+
         weiRaised = weiRaised.add(msg.value);
         uint256 tokensAmount = preIcoStrategy.countTokens(msg.value);
         mowjowToken.mint(beneficiary, tokensAmount);
-//
-//        Purchase(msg.sender, beneficiary, msg.value, tokensAmount);
+
+        Purchase(msg.sender, beneficiary, msg.value, tokensAmount);
         forwardFunds();
     }
 
@@ -127,7 +131,6 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     * Crowdsale state machine management.
     */
     function getState() public constant returns (State) {
-
         if (isFinalized) {
             return State.Finalized;
         }
@@ -137,20 +140,19 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         else if (trancheStrategy.isNoEmptyTranches()) {
             return State.Funding;
         }
+        else {
+            return State.Ended;
+        }
     }
 
     function addEarlyContributors(address investor, uint256 payments) public onlyOwner {
-        bool inList = isInList(investor, earlyContributors);
-        require(!inList);
-
         State currentState = getState();
         require(currentState == State.PreFunding);
 
         uint256 tokensAmount = earlyContribStrategy.countTokens(payments);
-        bool contrib = earlyContribStrategy.getFreeTokensInTranche(tokensAmount);
-        require(contrib);
-
         mowjowToken.mint(investor, tokensAmount);
+        earlyContribStrategy.soldInTranche(tokensAmount);
+
         earlyContributors.push(investor);
         Purchase(msg.sender, investor, payments, tokensAmount);
     }
