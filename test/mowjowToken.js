@@ -1,32 +1,28 @@
-var expectThrow = require('./helpers/expectThrow');
-var MowjowToken = artifacts.require('./MowjowToken.sol');
+const expectThrow = require('./helpers/expectThrow');
+const params = require('../migrations/config.json');
+const MowjowToken = artifacts.require('./MowjowToken.sol');
+const MowjowCrowdsale = artifacts.require('./MowjowCrowdsale.sol');
 
 contract('MowjowToken', function (accounts) {
     let token;
+    let tokenParams = params.mowjow_token;
 
     beforeEach(async function () {
-        token = await MowjowToken.new();
+        token = await MowjowToken.new(tokenParams.name, tokenParams.symbol,
+            tokenParams.decimals, tokenParams.initial_supply);
     });
 
     it('should start with correct params', async function () {
-        let expectName = 'MowjowToken',
-            name,
-            expectSymbol = 'MJT',
-            symbol,
-            expectDecimals = 18,
-            decimals,
-            expectEdtotalSupply = 75 * 1e8,
-            totalSupply;
 
-        name = await token.name();
-        symbol = await token.symbol();
-        decimals = await token.decimals();
-        totalSupply = await token.totalSupply();
+        let name = await token.name(),
+            symbol = await token.symbol(),
+            decimals = await token.decimals(),
+            totalSupply = await token.totalSupply();
 
-        assert.equal(name, expectName);
-        assert.equal(symbol, expectSymbol);
-        assert.equal(decimals, expectDecimals);
-        assert.equal(totalSupply.toNumber(), expectEdtotalSupply);
+        assert.equal(name, tokenParams.name);
+        assert.equal(symbol, tokenParams.symbol);
+        assert.equal(decimals, tokenParams.decimals);
+        assert.equal(totalSupply.toNumber(), tokenParams.initial_supply);
     });
 
     it('should return mintingFinished false after construction', async function () {
@@ -48,12 +44,11 @@ contract('MowjowToken', function (accounts) {
 
         let totalSupply = await token.totalSupply();
         assert(totalSupply, 100);
-    })
+    });
 
     it('should fail to mint after call to finishMinting', async function () {
         await token.finishMinting();
         assert.equal(await token.mintingFinished(), true);
         await expectThrow(token.mint(accounts[0], 100));
     })
-
 });

@@ -81,41 +81,39 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         earlyContribStrategy = strategy;
     }
 
-    function() payable {
-        throw;
-    }
-
-    event IsOk(bool ok);
+    event hasendedev(bool ev);
+    event ttokns(uint tokns);
     /*
     * @dev This method has been overridden  from  crowdsale
     */ 
     function buyTokens(address beneficiary) public payable {
 
+//        bool isValidPurchase = validPurchase();
+//        require(isValidPurchase);
+
         require(beneficiary != 0x0);
         require(msg.value > 0);
 
         State currentState = getState();
-        IsOk(true);
         PricingStrategy strategy;
-        IsOk(true);
+
         bool isValid = true;
 
-        if(currentState == State.PreFunding) {
-            isValid = isInList(beneficiary, whitelistInvestors);
-            strategy = preIcoStrategy;
-        } else if(currentState == State.Funding) {
-            isValid = validPurchase();
-            strategy = trancheStrategy;
-        }
+//        if(currentState == State.PreFunding) {
+//            isValid = isInList(beneficiary, whitelistInvestors);
+//            require(isValid);
+//            strategy = preIcoStrategy;
+//        } else if(currentState == State.Funding) {
+//            strategy = trancheStrategy;
+//        }
+        strategy = trancheStrategy;
 
-        require(isValid);
-
-        weiRaised = weiRaised.add(msg.value);
-        uint256 tokensAmount = preIcoStrategy.countTokens(msg.value);
+        uint256 tokensAmount = strategy.countTokens(msg.value);
+        ttokns(tokensAmount);
         mowjowToken.mint(beneficiary, tokensAmount);
-
-        Purchase(msg.sender, beneficiary, msg.value, tokensAmount);
+        weiRaised = weiRaised.add(msg.value);
         forwardFunds();
+        Purchase(msg.sender, beneficiary, msg.value, tokensAmount);
     }
 
     /**
@@ -123,9 +121,11 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     *   @return true if crowdsale event has ended
     */
     function hasEnded() public constant returns (bool) {
-        bool capReached = weiRaised >= cap;
+        bool capReached = weiRaised == cap;
         return super.hasEnded() || capReached;
     }
+
+    event IcoStart(bool start);
 
     /**
     * Crowdsale state machine management.
@@ -136,8 +136,10 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         }
         else if (preIcoStrategy.isNoEmptyPreIcoTranche()) {
             return State.PreFunding;
+
         }
         else if (trancheStrategy.isNoEmptyTranches()) {
+            IcoStart(true);
             return State.Funding;
         }
         else {
@@ -185,11 +187,12 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     /*
     * @dev Check the sale period is still and investor's amount no zero
     * @return boolean
-    */ 
+    */
     function validPurchase() internal constant returns (bool) { 
-        require(msg.value != 0);
-        require(!hasEnded()); 
-        return true; 
+        require(msg.value > 0);
+
+        bool ended = hasEnded();
+        return !ended;
     }    
 
     /*
@@ -212,24 +215,25 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     * should call super.finalization() to ensure the chain of finalization is executed entirely.
     * 
     */
-    function finalization() internal { 
+    function finalization() internal {
         mowjowToken.changeStatusFinalized();
-//        uint256 totalTokens =  mowjowToken.INITIAL_SUPPLY();
-//        uint256 eContrTok =  earlyContribStrategy.totalSoldTokens();
-//        uint256 preIcoTok =  preIcoStrategy.totalPreIcoSoldTokens();
-//        uint256 tranchTok = trancheStrategy.totalSoldTokens();
-//        //require(!earlyContribStrategy.getFreeTokensInTranche(requireTokens));
-//        uint256 teamTok = totalTokens.div(10);
-//        uint256 rewEngTok = totalTokens.div(20);
-//        uint256 reserveFundTok;
-//
-//        //calculate tokens for reserve fund
-//        reserveFundTok = totalTokens.sub(eContrTok);
-//        reserveFundTok = reserveFundTok.sub(preIcoTok);
-//        reserveFundTok = reserveFundTok.sub(tranchTok);
-//        reserveFundTok = reserveFundTok.sub(teamTok);
-//        reserveFundTok = reserveFundTok.sub(rewEngTok);
-//        require(finalizableMowjow.doFinalization(reserveFundTok, mowjowToken));
+        uint256 totalTokens =  mowjowToken.totalSupply();
+        uint256 earlyContributorsTokens =  earlyContribStrategy.totalSoldTokens();
+        uint256 preIcoTokens =  preIcoStrategy.totalPreIcoSoldTokens();
+        uint256 trancheTokens = trancheStrategy.totalSoldTokens();
+
+        uint256 teamBonuses = totalTokens.div(10);
+        uint256 rewardsEngineTokens = totalTokens.div(10);
+        uint256 longTermReserve;
+
+        longTermReserve = totalTokens.sub(earlyContributorsTokens);
+        longTermReserve = longTermReserve.sub(preIcoTokens);
+        longTermReserve = longTermReserve.sub(trancheTokens);
+        longTermReserve = longTermReserve.sub(teamBonuses);
+        longTermReserve = longTermReserve.sub(rewardsEngineTokens);
+
+        require(finalizableMowjow.doFinalization(longTermReserve,
+            rewardsEngineTokens, teamBonuses, mowjowToken));
     }
      
 }

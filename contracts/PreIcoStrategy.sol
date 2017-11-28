@@ -12,7 +12,7 @@ contract  PreIcoStrategy is PricingStrategy {
     uint256 maxCap;
 
     //events for testing  
-    event TokensForWhiteListInvestors(uint256 _token, uint256 _tokenAndBonus, uint256 bonusRate);
+    event TokensForWhiteListInvestors(uint256 _token, uint256 _tokenAndBonus, uint256 bonusRate, uint256 totalSoldTokens);
 
     /*
     * @dev Constructor
@@ -28,47 +28,55 @@ contract  PreIcoStrategy is PricingStrategy {
     * @dev set parameters from the crowdsale 
     * @return uint256 Return rate of bonus for an investor
     */
-    function setRate(uint256 _rate) public { 
+    function setRate(uint256 _rate) public {
         rate = _rate;
     }
-
+    event TokensAndBonus(uint256, uint256, uint256);
     /*
     * @dev Fetch the rate of bonus
     * @return uint256 Return rate of bonus for an investor
     */
-    function countTokens(uint256 _value) public returns (uint256 tokensAndBonus) {   
-         
-        uint256 tokens = _value.mul(rate);
-        uint256 bonusToken = tokens.mul(bonus).div(100);
+
+    function countTokens(uint256 _value) public returns (uint256 tokensAndBonus) {
+        uint256 etherInWei = 1e18;
+        require(_value >= etherInWei.div(rate));
+
+        uint256 tokens = _value.div(1e18).mul(rate);
+        uint256 bonusToken = (tokens).mul(bonus).div(100);
+
+        uint256 freeTokens = getUnSoldTokens();
         tokensAndBonus = tokens.add(bonusToken);
 
-        require(getFreeTokensInTranche(tokens));
+        if(freeTokens >= tokensAndBonus) {
+            soldInTranche(tokensAndBonus);
+        } else {
+            require(false);
+        }
 
-        TokensForWhiteListInvestors(tokens, tokensAndBonus, rate);
         return tokensAndBonus;
-    }  
+    }
 
     /*
     * @dev Check  
     * @return true if the transaction can buy tokens
-    */ 
+    */
     function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool) {
-        return (maxCap - totalPreIcoSoldTokens) > 0;
+        return (maxCap - totalPreIcoSoldTokens) >= requiredTokens;
     } 
 
-    function getNotSoldTokens() public returns (uint256) {      
+    function getUnSoldTokens() public returns (uint256) {
         return maxCap - totalPreIcoSoldTokens;
     }
 
     function isNoEmptyPreIcoTranche() public returns (bool) {
-        uint availableTokens = maxCap - totalPreIcoSoldTokens;
-        return availableTokens > 0 || now <= endTime;
+        uint256 availableTokens = maxCap.sub(totalPreIcoSoldTokens);
+        return availableTokens > 0 && now <= endTime;
     }
      
     /*
     * @dev summing sold of tokens  
     */ 
-    function soldInTranche(uint256 tokensAndBonus) public {
-        totalPreIcoSoldTokens += tokensAndBonus;
+    function soldInTranche(uint256 tokens) public {
+        totalPreIcoSoldTokens = totalPreIcoSoldTokens.add(tokens);
     }
 }

@@ -54,7 +54,7 @@ contract  EarlyContribStrategy is PricingStrategy {
     * @dev Check  
     * @return true if the transaction can buy tokens
     */ 
-    function getFreeTokensInTranche(uint256 requiredTokens) public {
+    function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool){
         uint256 remainingTokens = maxCap - totalSoldTokens;
         require(remainingTokens > requiredTokens);
     }

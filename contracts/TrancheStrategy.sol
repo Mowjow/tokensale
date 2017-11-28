@@ -21,15 +21,18 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
 
         //Value of tokens avalible the current period
         uint valueForTranche;
-    }  
+
+        uint rate;
+    }
 
     //events for testing
     event trancheSet(uint256 _tokenForTranchePeriod, uint256 _bonusForTranchePeriod);
-    event AvalibleTokens(uint256 freeTokens, uint256 requireTokens, bool hasTokensForSale);
+    event AvailableTokens(uint256 freeTokens, uint256 requireTokens, bool hasTokensForSale);
     event TokenForInvestor(uint256 _token, uint256 _tokenAndBonus, uint256 indexOfperiod, uint256 bonusRate);
     event tokensSoldInTranche(uint256 _tokenForTranchePeriod, uint256 _tokenBonusForTranchePeriod, uint256 _bonusForTranchePeriod);
 
     mapping (uint256 => uint256) public tokenSoldInPeriod;
+    uint MAX_TRANCHES = 50;
 
     //Store BonusStrategy in a fixed array, so that it can be seen in a blockchain explorer
     BonusSchedule[] public tranches; 
@@ -38,8 +41,8 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
     * @dev Constructor
     * @return uint256 Return rate of bonus for an investor
     */
-    function TrancheStrategy(uint256[] _bonuses, uint[] _valueForTranches) { 
-       require(setTranche(_bonuses, _valueForTranches));
+    function TrancheStrategy(uint256[] _bonuses, uint[] _valueForTranches, uint[] _rates) {
+       require(setTranche(_bonuses, _valueForTranches, _rates));
     }
 
     /*
@@ -54,22 +57,32 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
     * @dev Fetch the rate of bonus
     * @return uint256 Return rate of bonus for an investor
     */
-    function countTokens(uint256 _value) public returns (uint256 tokensAndBonus) {  
+    function countTokens(uint256 _value) public returns (uint256 tokensAndBonus) {
         uint indexOfTranche = defineTranchePeriod();
-        uint256 bonusRate = tranches[indexOfTranche].bonus;   
+        if(indexOfTranche == (MAX_TRANCHES + 1)) {
+            throw;
+        }
+        require(indexOfTranche != MAX_TRANCHES + 1);
+
+        BonusSchedule currentTranche = tranches[indexOfTranche];
+
+        uint256 etherInWei = 1e18;
+        require(_value >= etherInWei.div(currentTranche.rate));
+
+        uint256 bonusRate = currentTranche.bonus;
 
         // calculate token amount without bonus
-        uint256 tokens = _value.mul(rate); 
-        require(getFreeTokensInTranche(tokens));
+        uint256 tokens = _value.div(1e18).mul(currentTranche.rate);
+        uint256 bonusToken = tokens.mul(bonusRate).div(100);
 
-        // calculate bonus 
-        uint256 bonusToken = tokens.mul(bonusRate).div(100); 
-        
-        // total tokens amount to be created
-        tokensAndBonus = tokens.add(bonusToken);  
-        TokenForInvestor(tokens, tokensAndBonus, indexOfTranche, bonusRate); 
-        return tokensAndBonus; 
-    }  
+        tokensAndBonus = tokens.add(bonusToken);
+
+        soldInTranche(tokensAndBonus);
+
+        require(getFreeTokensInTranche(tokens));
+        TokenForInvestor(tokens, tokensAndBonus, indexOfTranche, bonusRate);
+        return tokensAndBonus;
+    }
 
     /*
     * @dev Check  
@@ -80,7 +93,6 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
         uint256 indexOfTranche = defineTranchePeriod();
         hasTokens = tranches[indexOfTranche].valueForTranche > requiredTokens;
 
-        AvalibleTokens(tranches[indexOfTranche].valueForTranche, requiredTokens, hasTokens);     
         return hasTokens;
     }
 
@@ -100,9 +112,14 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
     */
     function soldInTranche(uint256 tokensAndBonus) public {
         uint256 indexOfTranche = defineTranchePeriod();
+
         require(tranches[indexOfTranche].valueForTranche >= tokensAndBonus);
         tranches[indexOfTranche].valueForTranche.sub(tokensAndBonus);
         totalSoldTokens.add(tokensAndBonus);
+    }
+
+    function getUnsoldInTranche() {
+        uint256 indexOfTranche = defineTranchePeriod();
     }
 
     function isNoEmptyTranches() public returns(bool) {
@@ -118,26 +135,36 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
     * @dev set parameters of a tranche 
     * @return true if succeful setting a tranche
     */ 
-    function setTranche(uint256[] _bonuses, uint[] _valueForTranches) public returns(bool) {
-        if (_bonuses.length == _valueForTranches.length) {
-            for (uint i = 0; i < _bonuses.length; i++) { 
-                tranches.push(BonusSchedule({bonus: _bonuses[i], valueForTranche: _valueForTranches[i]}));
+    function setTranche(uint256[] _bonuses, uint[] _valueForTranches, uint[] _rates) public returns(bool) {
+        bool canSet = _bonuses.length == _valueForTranches.length && _valueForTranches.length == _rates.length;
+
+        bool isSetable = canSet && _bonuses.length <= 50;
+
+        if (isSetable) {
+            for (uint i = 0; i < _bonuses.length; i++) {
+                tranches.push(BonusSchedule({
+                    bonus: _bonuses[i],
+                    valueForTranche: _valueForTranches[i],
+                    rate: _rates[i]
+                }));
             }
         }
-        return tranches.length == _bonuses.length;
-    } 
+
+        return isSetable;
+    }
 
     // /
     // * @dev get index of tranche  
     // * @return uint256 number of current tranche in array tranches
     // */ 
-    function defineTranchePeriod() internal constant returns (uint256 indexOfTranche) {
-        indexOfTranche = 0;
-        for (uint256 i = 0; i < tranches.length; i++) { 
+    function defineTranchePeriod() internal constant returns (uint256) {
+        for (uint256 i = 0; i < tranches.length; i++) {
             if (tranches[i].valueForTranche > 0) {
-                return i; 
-            }            
-        } 
+                return i;
+            }
+        }
+
+        return MAX_TRANCHES + 1;
     }
 
     /**
@@ -146,5 +173,5 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
     */ 
     function isTrancheSet() internal constant returns (bool) {
         return true; 
-    } 
+    }
 }

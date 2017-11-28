@@ -1,21 +1,28 @@
 {
 
     "early_contributors": {
-        "token_cap": 60000000,
+        "token_cap": 480000000,
         "rate": 40000,
         "bonus": 100
     },
     "pre_ico": {
-        "token_cap": 60000000,
+        "token_cap": 6e8,
         "rate": 40000,
-        "bonus": 100
+        "bonus": 50
+    },
+    "mowjow_token": {
+        "name": "MowjowToken",
+        "symbol": "MJT",
+        "decimals": 18,
+        "initial_supply": 7500000000
     },
     "bonusesIco": [35, 20, 5, 0],
     "valueForTranches": [6e8, 6e8, 6e8, 6e8],
+    "rates": [54000, 48000, 42000, 40000],
     "bonusPreIco": 50,
     "valuePreIco": 6e8,
     "bonusEarlyContrib": 100,
     "valueEarlyContrib": 1e8,
     "gasValue": { "gas": 4700000 },
-    "countOfOvners": 6    
+    "countOfOwners": 6
 }

@@ -21,7 +21,7 @@ const TrancheStrategy = artifacts.require('TrancheStrategy');
 const FinalizableMowjow = artifacts.require('FinalizableMowjow');
 const PURCHASE_EVENT = 'Purchase';
 
-contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
+contract('EarlyContribStrategy', function ([_, investor, wallet, purchaser]) {
     const cap = ether(0.1);
     const rate = new BigNumber(40000);
     const value = ether(0.0000000000000001);
@@ -47,8 +47,8 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
             this.earlyContribStrategy.address, this.preIcoStrategy.address,
             this.trancheStrategy.address, this.finalizableMowjow.address);
 
-        const tokenAddress = await this.mowjowCrowdsale.token();
-        this.token = MowjowToken.at(tokenAddress);
+        let token = await this.mowjowCrowdsale.token();
+        this.token = await MowjowToken.at(token);
     });
 
     describe('payments for early contributors', function () {

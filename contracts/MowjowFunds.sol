@@ -4,8 +4,8 @@ pragma solidity ^0.4.11;
 import "zeppelin-solidity/contracts/ownership/Ownable.sol"; 
 import "./MowjowToken.sol";
 
-contract  MowjowFunds is Ownable {  
-     
+contract  MowjowFunds is Ownable {
+
     /** How much we have allocated to the funds*/
     mapping(uint => uint256) public balancesOfFunds; 
     event AddedBalanceToFund(uint numberFund, uint256 addedTokens, uint256 sumTokensFund);
@@ -25,7 +25,7 @@ contract  MowjowFunds is Ownable {
         balancesOfFunds[numberOfFund] += amount;
         AddedBalanceToFund(numberOfFund, amount, balancesOfFunds[numberOfFund]);
     }
-
+    event sndr(address sender);
     function transferToFund(address destinationAddress, uint numberOfFund,
         uint256 amount, MowjowToken token) public onlyOwner fundHasAmount(numberOfFund, amount) {
         token.transfer(destinationAddress, amount);

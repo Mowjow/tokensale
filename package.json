@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "truffle test",
-    "test-net": "testrpc --network rpc -l 990000000000000 -u 0 -u 1 -u 2 -u 3",
+    "test-net": "testrpc --network development -l 990000000000000 -u 0 -u 1 -u 2 -u 3",
     "ropsten": "testrpc --network ropsten -l 990000000000000 -u 0 -u 1 -u 2 -u 3 --gas 5555555555",
     "remix": "remixd -S /home/developer/Documents/projects/mowjow/contracts",
     "abi-param": "node  ./test/abi-encoded/abi.js"
@@ -22,6 +22,6 @@
     "ethereumjs-abi": "^0.6.4",
     "ethereumjs-wallet": "^0.6.0",
     "truffle-hdwallet-provider": "0.0.3",
-    "zeppelin-solidity": "^1.3.0"
+    "zeppelin-solidity": "^1.4.0"
   }
 }
