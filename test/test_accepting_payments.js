@@ -19,14 +19,14 @@ const EarlyContribStrategy = artifacts.require("EarlyContribStrategy");
 const PreIcoStrategy = artifacts.require("PreIcoStrategy");
 const TrancheStrategy = artifacts.require('TrancheStrategy');
 const FinalizableMowjow = artifacts.require('FinalizableMowjow');
+const PURCHASE_EVENT = 'Purchase';
 
 contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     const cap = ether(0.1);
-    const lessThanCap = ether(0.01);
-    const rate = new BigNumber(20000);
+    const rate = new BigNumber(40000);
     const value = ether(0.0000000000000001);
 
-    const expectedTokenAmount = rate.mul(value).mul(2);
+    const expectedTokenAmount = rate.mul(value).mul(2); // 100% bonus
 
     before(async function () {
         //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
@@ -34,20 +34,21 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     });
 
     beforeEach(async function () {
-        this.startTime = latestTime() + duration.weeks(1); 
+        this.startTime = latestTime() + duration.weeks(1);
         this.endTime = this.startTime + duration.weeks(8);
-        this.afterEndTime = this.endTime + duration.seconds(1);
+        this.afterEndTime = this.endTime + duration.weeks(1);
 
         this.finalizableMowjow = await FinalizableMowjow.deployed();
-        this.earlyContribStrategy = await EarlyContribStrategy.deployed() ;
-        this.preIcoStrategy = await PreIcoStrategy.deployed() ;
-        this.trancheStrategy = await TrancheStrategy.deployed();
+        this.earlyContribStrategy = await EarlyContribStrategy.deployed();
+        this.preIcoStrategy = await PreIcoStrategy.new(100, 80000, 40000);
+        this.trancheStrategy = await TrancheStrategy.new([100], [80000], [40000]);
         this.mowjowCrowdsale = await MowjowCrowdsale.new(
             this.startTime, this.endTime, rate, wallet, cap,
             this.earlyContribStrategy.address, this.preIcoStrategy.address,
             this.trancheStrategy.address, this.finalizableMowjow.address);
 
-        this.token = await this.mowjowCrowdsale.token();
+        let token = await this.mowjowCrowdsale.token();
+        this.token = await MowjowToken.at(token);
     });
     
     describe('creating a valid crowdsale', function () {
@@ -62,7 +63,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
 
 
         beforeEach(async function () {
-            await increaseTimeTo(this.startTime)
+            //await increaseTimeTo(this.startTime)
         });
 
         it('should be token owner', async function () {
@@ -92,10 +93,10 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     //     });
     // });
     //
-    // describe('awd', function () {
-    //     it('should accept payments after start', async function () {
-    //         increaseTimeTo(this.startTime);
-    //         await this.mowjowCrowdsale.buyTokens(investor, { value: value, from: purchaser }).should.be.fulfilled
-    //     })
-    // })
+    describe('awd', function () {
+        it('should accept payments after start', async function () {
+            increaseTimeTo(this.startTime);
+            await this.mowjowCrowdsale.buyTokens(investor, { value: value, from: purchaser }).should.be.fulfilled
+        })
+    })
 });

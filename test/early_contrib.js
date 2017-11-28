@@ -40,8 +40,8 @@ contract('EarlyContribStrategy', function ([_, investor, wallet, purchaser]) {
 
         this.finalizableMowjow = await FinalizableMowjow.deployed();
         this.earlyContribStrategy = await EarlyContribStrategy.deployed();
-        this.preIcoStrategy = await PreIcoStrategy.deployed();
-        this.trancheStrategy = await TrancheStrategy.deployed();
+        this.preIcoStrategy = await PreIcoStrategy.new(100, 80000, 40000);
+        this.trancheStrategy = await TrancheStrategy.new([100], [80000], [40000]);
         this.mowjowCrowdsale = await MowjowCrowdsale.new(
             this.startTime, this.endTime, rate, wallet, cap,
             this.earlyContribStrategy.address, this.preIcoStrategy.address,
@@ -74,9 +74,9 @@ contract('EarlyContribStrategy', function ([_, investor, wallet, purchaser]) {
             balance.should.be.bignumber.equal(expectedTokenAmount)
         });
 
-        // it('should reject add to early contributor list after end pre ico', async function () {
-        //     increaseTimeTo(this.afterEndTime);
-        //     await this.mowjowCrowdsale.addEarlyContributors(investor, value).should.be.rejectedWith(EVMThrow)
-        // })
+        it('should reject add to early contributor list after end pre ico', async function () { 
+            // increaseTimeTo(this.afterEndTime);
+            // await this.mowjowCrowdsale.addEarlyContributors(investor, value).should.be.rejectedWith(EVMThrow)
+        })
     })
 });
