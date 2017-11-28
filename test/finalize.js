@@ -20,7 +20,7 @@ const TrancheStrategy = artifacts.require('TrancheStrategy');
 const FinalizableMowjow = artifacts.require('FinalizableMowjow');
 
 contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
-    const cap = ether(1);
+    const cap = ether(2);
     const lessThanCap = ether(0.01);
     const rate = new BigNumber(20000);
     const value = ether(0.0000000000000001);
@@ -61,30 +61,31 @@ contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
             isFinishedCrowdsale.should.be.equal(false);
         });
 
-        it('should be ended if cap reached', async function () {
+        // it('should be ended if cap reached', async function () {
+        //     await this.mowjowCrowdsale.addWhitelistInvestors(investor, {from: _});
+        //
+        //     await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser }); // presale
+        //     await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser }); // crowdsale
+        //
+        //     let hasEnded = await this.mowjowCrowdsale.hasEnded();
+        //     hasEnded.should.equal(true)
+        // });
+
+        it('should be finalized', async function () {
             await this.mowjowCrowdsale.addWhitelistInvestors(investor, {from: _});
 
-            let b = await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser }); // presale
+            await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser }); // presale
+            await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser }); // crowdsale
 
-            let c = await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser }); // crowdsale
-
-            let r = 0;
-            // await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser });
-            // await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser });
-            // let balance = await this.token.balanceOf(investor);
-            // let hasEnded = await this.mowjowCrowdsale.hasEnded();
-            // hasEnded.should.equal(true)
-        });
-        //
-        // it('should be finalized', async function () {
-        //     await this.mowjowCrowdsale.send(cap);
-        //     let hasEnded = await this.mowjowCrowdsale.hasEnded();
-        //     hasEnded.should.equal(true);
-        //     await this.mowjowCrowdsale.finalize();
-        //     let isFinalize = await this.mowjowCrowdsale.isFinalized();
-        //     isFinalize.should.be.equal(true);
-        //     let isFinishedCrowdsale = await this.finalizableMowjow.isFinishedCrowdsale();
-        //     isFinishedCrowdsale.should.be.equal(true);
-        // })
+            let hasEnded = await this.mowjowCrowdsale.hasEnded();
+            hasEnded.should.equal(true);
+            let owner = await this.token.owner();
+            let res = await this.mowjowCrowdsale.finalize({from: _});
+            let isFinalize = await this.mowjowCrowdsale.isFinalized();
+            let balance = await this.token.balanceOf(_);
+            isFinalize.should.be.equal(true);
+            let isFinishedCrowdsale = await this.finalizableMowjow.isFinishedCrowdsale();
+            isFinishedCrowdsale.should.be.equal(true);
+        })
     })
 });

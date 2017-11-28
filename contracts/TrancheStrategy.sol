@@ -59,9 +59,6 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
     */
     function countTokens(uint256 _value) public returns (uint256 tokensAndBonus) {
         uint indexOfTranche = defineTranchePeriod();
-        if(indexOfTranche == (MAX_TRANCHES + 1)) {
-            throw;
-        }
         require(indexOfTranche != MAX_TRANCHES + 1);
 
         BonusSchedule currentTranche = tranches[indexOfTranche];
@@ -71,7 +68,6 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
 
         uint256 bonusRate = currentTranche.bonus;
 
-        // calculate token amount without bonus
         uint256 tokens = _value.div(1e18).mul(currentTranche.rate);
         uint256 bonusToken = tokens.mul(bonusRate).div(100);
 
@@ -79,9 +75,11 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
 
         soldInTranche(tokensAndBonus);
 
-        require(getFreeTokensInTranche(tokens));
+//        require(getFreeTokensInTranche(tokens));
         TokenForInvestor(tokens, tokensAndBonus, indexOfTranche, bonusRate);
         return tokensAndBonus;
+
+        return 0;
     }
 
     /*
@@ -112,20 +110,15 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
     */
     function soldInTranche(uint256 tokensAndBonus) public {
         uint256 indexOfTranche = defineTranchePeriod();
-
         require(tranches[indexOfTranche].valueForTranche >= tokensAndBonus);
-        tranches[indexOfTranche].valueForTranche.sub(tokensAndBonus);
+        tranches[indexOfTranche].valueForTranche = tranches[indexOfTranche].valueForTranche.sub(tokensAndBonus);
         totalSoldTokens.add(tokensAndBonus);
-    }
-
-    function getUnsoldInTranche() {
-        uint256 indexOfTranche = defineTranchePeriod();
     }
 
     function isNoEmptyTranches() public returns(bool) {
         uint256 sumFreeTokens = 0;
         for (uint i = 0; i < tranches.length; i++) {
-            sumFreeTokens.add(tranches[i].valueForTranche);
+            sumFreeTokens = sumFreeTokens.add(tranches[i].valueForTranche);
         }
         bool isValid = sumFreeTokens > 0 && now <= endTime;
         return isValid;

@@ -7,9 +7,9 @@ contract  PreIcoStrategy is PricingStrategy {
     using SafeMath for uint256;
 
     uint256 public rate;
-    uint256 public totalPreIcoSoldTokens = 0;  
+    uint256 public totalPreIcoSoldTokens;
     uint256 bonus;
-    uint256 maxCap;
+    uint256 public maxCap;
 
     //events for testing  
     event TokensForWhiteListInvestors(uint256 _token, uint256 _tokenAndBonus, uint256 bonusRate, uint256 totalSoldTokens);
@@ -22,6 +22,7 @@ contract  PreIcoStrategy is PricingStrategy {
         bonus = _bonus;
         maxCap = _maxCap;
         rate = _rate;
+        totalPreIcoSoldTokens = 0;
     }
 
     /*
@@ -69,7 +70,7 @@ contract  PreIcoStrategy is PricingStrategy {
     }
 
     function isNoEmptyPreIcoTranche() public returns (bool) {
-        uint256 availableTokens = maxCap.sub(totalPreIcoSoldTokens);
+        uint256 availableTokens = maxCap - totalPreIcoSoldTokens;
         return availableTokens > 0 && now <= endTime;
     }
      

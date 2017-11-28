@@ -13,6 +13,12 @@ module.exports = function (deployer, network, accounts) {
           const  mj = await MowjowFunds.deployed();
           return deployer.deploy(FinalizableMowjow, mj.address, testData.gasValue);
        })
+       .then( async res => {
+           const finalizableAddress = await FinalizableMowjow.deployed();
+           const  mj = await MowjowFunds.deployed();
+           const actionOwners = [finalizableAddress.address, accounts[0]];
+           return mj.setActionOwners(actionOwners);
+       })
        .then(async res => deployer.deploy(TrancheStrategy,
            testData.bonusesIco,testData.valueForTranches, testData.rates, testData.gasValue))
        .then(async res => deployer.deploy(EarlyContribStrategy, testData.early_contributors.bonus,

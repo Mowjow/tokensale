@@ -81,15 +81,10 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         earlyContribStrategy = strategy;
     }
 
-    event hasendedev(bool ev);
-    event ttokns(uint tokns);
     /*
     * @dev This method has been overridden  from  crowdsale
     */ 
     function buyTokens(address beneficiary) public payable {
-
-//        bool isValidPurchase = validPurchase();
-//        require(isValidPurchase);
 
         require(beneficiary != 0x0);
         require(msg.value > 0);
@@ -97,21 +92,17 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         State currentState = getState();
         PricingStrategy strategy;
 
-        bool isValid = true;
-
-//        if(currentState == State.PreFunding) {
-//            isValid = isInList(beneficiary, whitelistInvestors);
-//            require(isValid);
-//            strategy = preIcoStrategy;
-//        } else if(currentState == State.Funding) {
-//            strategy = trancheStrategy;
-//        }
-        strategy = trancheStrategy;
-
+        if(currentState == State.PreFunding) {
+            bool isValid = isInList(beneficiary, whitelistInvestors);
+            require(isValid);
+            strategy = preIcoStrategy;
+        } else if(currentState == State.Funding) {
+            strategy = trancheStrategy;
+        }
         uint256 tokensAmount = strategy.countTokens(msg.value);
-        ttokns(tokensAmount);
         mowjowToken.mint(beneficiary, tokensAmount);
         weiRaised = weiRaised.add(msg.value);
+
         forwardFunds();
         Purchase(msg.sender, beneficiary, msg.value, tokensAmount);
     }
@@ -125,8 +116,6 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         return super.hasEnded() || capReached;
     }
 
-    event IcoStart(bool start);
-
     /**
     * Crowdsale state machine management.
     */
@@ -136,10 +125,8 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         }
         else if (preIcoStrategy.isNoEmptyPreIcoTranche()) {
             return State.PreFunding;
-
         }
         else if (trancheStrategy.isNoEmptyTranches()) {
-            IcoStart(true);
             return State.Funding;
         }
         else {
@@ -232,8 +219,11 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         longTermReserve = longTermReserve.sub(teamBonuses);
         longTermReserve = longTermReserve.sub(rewardsEngineTokens);
 
+        uint256 sumOfTokens = longTermReserve.add(teamBonuses).add(rewardsEngineTokens);
+        token.mint(msg.sender, sumOfTokens);
+
         require(finalizableMowjow.doFinalization(longTermReserve,
-            rewardsEngineTokens, teamBonuses, mowjowToken));
+            rewardsEngineTokens, teamBonuses));
     }
      
 }

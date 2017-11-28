@@ -1,7 +1,8 @@
 pragma solidity ^0.4.11;
 
 import "./Finalizable.sol";
-//import "./MowjowFunds.sol";
+import "./MowjowFunds.sol";
+import "./MowjowToken.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 /**
  * @title FinalizableMowjow
@@ -12,35 +13,29 @@ contract FinalizableMowjow is Finalizable {
     using SafeMath for uint256;
 
     bool public isFinishedCrowdsale;
-//    MowjowFunds public tokenWallet;
+    MowjowFunds public tokenWallet;
 
     event MultisigFull(address _multisigWallet, uint256 _totalDistribution);
-//address _tokenWallet
-    function FinalizableMowjow() public {
-//        tokenWallet = MowjowFunds(_tokenWallet);
+
+    function FinalizableMowjow(address _tokenWallet) public {
+        tokenWallet = MowjowFunds(_tokenWallet);
         isFinishedCrowdsale = false;
     }
 
-    function doFinalization(uint256 longTermReserve, uint256 rewardsEngine, uint256 team, MowjowToken token) public returns(bool) {
-//        require(!isFinishedCrowdsale);
-//
-//        uint256 totalBonuses = longTermReserve.add(rewardsEngine).add(team);
-//        address tokenWalletOwner = tokenWallet.owner();
-//        token.mint(tokenWalletOwner, totalBonuses);
-//        MultisigFull(tokenWalletOwner, totalBonuses);
-//
+    function doFinalization(uint256 _longTermReserve, uint256 _rewardsEngine, uint256 _team) public returns(bool) {
+        require(!isFinishedCrowdsale);
+
 //        // 0 - longTermReserve
 //        // 1 - rewards
 //        // 2 - team
-//        tokenWallet.fund(0, longTermReserve);
-//        tokenWallet.fund(1, rewardsEngine);
-//        tokenWallet.fund(1, team);
-//
-//        isFinishedCrowdsale = true;
+        tokenWallet.fund(0, _longTermReserve);
+        tokenWallet.fund(1, _rewardsEngine);
+        tokenWallet.fund(1, _team);
+
+        isFinishedCrowdsale = true;
         return isFinishedCrowdsale;
     }
 
-    function sendTokensToGroup(uint256 tokensForGroup,
-        address walletOfGroup, MowjowToken token) internal returns(bool) {
+    function sendTokensToGroup(uint256 tokensForGroup, address walletOfGroup) internal returns(bool) {
     }
 }
