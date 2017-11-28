@@ -21,7 +21,6 @@ const FinalizableMowjow = artifacts.require('FinalizableMowjow');
 
 contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
     const cap = ether(2);
-    const lessThanCap = ether(0.01);
     const rate = new BigNumber(20000);
     const value = ether(0.0000000000000001);
 
@@ -50,8 +49,9 @@ contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
     });
 
     describe("finalize did not start", function() {
-        beforeEach(async function () {
-            await increaseTimeTo(this.startTime)
+
+        beforeEach(function () {
+
         });
 
         it('is not finalized after start', async function () {
@@ -61,15 +61,15 @@ contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
             isFinishedCrowdsale.should.be.equal(false);
         });
 
-        // it('should be ended if cap reached', async function () {
-        //     await this.mowjowCrowdsale.addWhitelistInvestors(investor, {from: _});
-        //
-        //     await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser }); // presale
-        //     await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser }); // crowdsale
-        //
-        //     let hasEnded = await this.mowjowCrowdsale.hasEnded();
-        //     hasEnded.should.equal(true)
-        // });
+        it('should be ended if cap reached', async function () {
+            await this.mowjowCrowdsale.addWhitelistInvestors(investor, {from: _});
+
+            await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser }); // presale
+            await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser }); // crowdsale
+
+            let hasEnded = await this.mowjowCrowdsale.hasEnded();
+            hasEnded.should.equal(true)
+        });
 
         it('should be finalized', async function () {
             await this.mowjowCrowdsale.addWhitelistInvestors(investor, {from: _});
@@ -79,10 +79,8 @@ contract('FinalizableMowjow', function ([_, investor, wallet, purchaser]) {
 
             let hasEnded = await this.mowjowCrowdsale.hasEnded();
             hasEnded.should.equal(true);
-            let owner = await this.token.owner();
-            let res = await this.mowjowCrowdsale.finalize({from: _});
+            await this.mowjowCrowdsale.finalize({from: _});
             let isFinalize = await this.mowjowCrowdsale.isFinalized();
-            let balance = await this.token.balanceOf(_);
             isFinalize.should.be.equal(true);
             let isFinishedCrowdsale = await this.finalizableMowjow.isFinishedCrowdsale();
             isFinishedCrowdsale.should.be.equal(true);

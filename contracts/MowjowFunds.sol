@@ -1,6 +1,5 @@
 pragma solidity ^0.4.11; 
 
-
 import "zeppelin-solidity/contracts/ownership/Ownable.sol"; 
 import "./MowjowToken.sol";
 
@@ -48,7 +47,6 @@ contract  MowjowFunds is Ownable {
 
     function setActionOwners(address[] _actionOwners) onlyOwner {
         require(actionOwners.length == 0);
-
         actionOwners = _actionOwners;
     }
 }

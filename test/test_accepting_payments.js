@@ -24,9 +24,6 @@ const PURCHASE_EVENT = 'Purchase';
 contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
     const cap = ether(0.1);
     const rate = new BigNumber(40000);
-    const value = ether(0.0000000000000001);
-
-    const expectedTokenAmount = rate.mul(value).mul(2); // 100% bonus
 
     before(async function () {
         //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
@@ -63,7 +60,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
 
 
         beforeEach(async function () {
-            //await increaseTimeTo(this.startTime)
+            //increaseTimeTo(this.startTime)
         });
 
         it('should be token owner', async function () {
@@ -83,20 +80,4 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
             ended.should.equal(true)
         });
     });
-
-    // describe('accepting payments in different time of the crowdsale', function () {
-    //
-    //     it('should reject payments before start', async function () {
-    //         increaseTimeTo(this.startTime - duration.days(1));
-    //         let res = await this.mowjowCrowdsale.buyTokens(investor, { from: investor }).should.be.rejectedWith(EVMThrow);
-    //         let a = 5;
-    //     });
-    // });
-    //
-    describe('awd', function () {
-        it('should accept payments after start', async function () {
-            increaseTimeTo(this.startTime);
-            await this.mowjowCrowdsale.buyTokens(investor, { value: value, from: purchaser }).should.be.fulfilled
-        })
-    })
 });

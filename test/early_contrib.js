@@ -74,9 +74,11 @@ contract('EarlyContribStrategy', function ([_, investor, wallet, purchaser]) {
             balance.should.be.bignumber.equal(expectedTokenAmount)
         });
 
-        it('should reject add to early contributor list after end pre ico', async function () { 
-            // increaseTimeTo(this.afterEndTime);
-            // await this.mowjowCrowdsale.addEarlyContributors(investor, value).should.be.rejectedWith(EVMThrow)
+        it('should reject add to early contributor list after end pre ico', async function () {
+            await this.mowjowCrowdsale.addWhitelistInvestors(investor, {from: _});
+            await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser });
+
+            let res = await this.mowjowCrowdsale.addEarlyContributors(investor, value).should.be.rejectedWith(EVMThrow);
         })
     })
 });

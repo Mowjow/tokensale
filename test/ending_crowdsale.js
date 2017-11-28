@@ -50,15 +50,6 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser, secondInv
         this.token = MowjowToken.at(await this.mowjowCrowdsale.token());
     });
 
-    describe('ending cap reached', function () { 
-
-        it('should be ended if cap reached', async function () {
-            await this.mowjowCrowdsale.send(cap);
-            let hasEnded = await this.mowjowCrowdsale.hasEnded();
-            hasEnded.should.equal(true);
-        })
-    })
-
     describe('ending time finished', function () { 
 
         it('should not be ended if time of the crowdsale', async function () {

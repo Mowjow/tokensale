@@ -22,18 +22,12 @@ const FinalizableMowjow = artifacts.require('FinalizableMowjow');
 const MowjowFunds = artifacts.require('MowjowFunds');
 
 contract('MowjowFunds', function ([_, investor, wallet, purchaser]) {
-    const cap = ether(0.1);
-    const lessThanCap = ether(0.01);
+    const cap = ether(2);
     const rate = new BigNumber(20000);
-    const value = ether(0.00000000000000011);
-
-    const expectedTokenAmount = rate.mul(value).mul(1.5);
 
     before(async function () {
-        //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
-        await advanceBlock()
+        await advanceBlock();
     });
-
 
     let tokenParams = params.mowjow_token;
 
@@ -58,7 +52,9 @@ contract('MowjowFunds', function ([_, investor, wallet, purchaser]) {
     describe('payments in mowjow Funds', function () {
 
         it('should add amount to fund', async function () {
-            const {logs} = await this.mowjowFunds.fund(0, 100);
+
+            let a = 5;
+            const {logs} = await this.mowjowFunds.fund(0, 100, {from: _});
             const event = logs.find(e => e.event === 'AddedBalanceToFund');
             should.exist(event);
             event.args.numberFund.should.be.bignumber.equal(0);
@@ -67,16 +63,16 @@ contract('MowjowFunds', function ([_, investor, wallet, purchaser]) {
         });
 
         it('should send amount from fund to address', async function() {
-            await this.token.mint(_, 1000, {from: _});
-            const {logs} = await this.mowjowFunds.fund(0, 100);
+            await this.token.mint(this.mowjowFunds.address, 1000, {from: _});
+            const {logs} = await this.mowjowFunds.fund(0, 100, {from: _});
             await this.token.changeStatusFinalized({from: _});
-            // const instance = await this.mowjowFunds.transferToFund(investor, 0, 50, this.token.address, {from: _});
-            // let balance = await this.token.balanceOf(_);
-            // const newEvent = instance.logs.find(e => e.event === 'SentFromFund');
-            // should.exist(newEvent);
-            // newEvent.args.numberFund.should.be.bignumber.equal(0);
-            // newEvent.args.destination.should.be.bignumber.equal(investor);
-            // newEvent.args.sentTokens.should.be.bignumber.equal(50)
+            const instance = await this.mowjowFunds.transferToFund(investor, 0, 50, this.token.address, {from: _});
+            let balance = await this.token.balanceOf(_);
+            const newEvent = instance.logs.find(e => e.event === 'SentFromFund');
+            should.exist(newEvent);
+            newEvent.args.numberFund.should.be.bignumber.equal(0);
+            newEvent.args.destination.should.be.bignumber.equal(investor);
+            newEvent.args.sentTokens.should.be.bignumber.equal(50);
         })
     })
 });
