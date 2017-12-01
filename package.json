@@ -21,6 +21,7 @@
     "chai-bignumber": "^2.0.2",
     "ethereumjs-abi": "^0.6.4",
     "ethereumjs-wallet": "^0.6.0",
+    "truffle-contract": "^3.0.1",
     "truffle-hdwallet-provider": "0.0.3",
     "zeppelin-solidity": "^1.4.0"
   }

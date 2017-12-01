@@ -48,7 +48,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     * @param _endTime   uint256     Specifies the end date of the ICO
     * @param _rate      uint256     Specifies how many token units a buyer gets per wei
     * @param _wallet    address     Specifies address where funds are collected
-    * @param _cap       uint256     Specifies total count of tokens
+    *     Specifies total count of ether
     */
     function MowjowCrowdsale(
         uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap,
@@ -109,7 +109,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
     /**
     *   overriding Crowdsale hasEnded to add cap logic
-    *   @return true if crowdsale event has ended
+    *   @return boolean Return true if crowdsale event has ended
     */
     function hasEnded() public constant returns (bool) {
         bool capReached = weiRaised == cap;
@@ -117,7 +117,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     }
 
     /**
-    * Crowdsale state machine management.
+    * @dev Crowdsale state machine management.
     */
     function getState() public constant returns (State) {
         if (isFinalized) {
@@ -134,6 +134,11 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         }
     }
 
+    /*
+    *  @dev Add Early contributor to list and to mint tokens for him (only in the presale time)
+    *  @param investor address Early contributor's address
+    *  @param payments uint256 Early contributor's payments in ether
+    */
     function addEarlyContributors(address investor, uint256 payments) public onlyOwner {
         State currentState = getState();
         require(currentState == State.PreFunding);
@@ -146,6 +151,10 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         Purchase(msg.sender, investor, payments, tokensAmount);
     }
 
+    /*
+   *  @dev Add Whitelist investor to list
+   *  @param investor address Whitelist investor's address
+   */
     function addWhitelistInvestors(address investor) public onlyOwner {
         require((getState() == State.PreFunding));
         whitelistInvestors.push(investor);
@@ -153,9 +162,10 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
     /*
     * @dev Check if address is in early contributors
-    * @return boolean
+    * @param investor address Early contributors's address
+    * @param list address[] Early contributors's addresses
+    * @return boolean Return true if current investor's address is in to list
     */
-
     function isInList(address investor, address[] list) internal constant returns (bool) {
         State state = getState();
         require(state == State.PreFunding);
@@ -173,7 +183,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     
     /*
     * @dev Check the sale period is still and investor's amount no zero
-    * @return boolean
+    * @return boolean Return true if this payment is avalable
     */
     function validPurchase() internal constant returns (bool) { 
         require(msg.value > 0);
@@ -184,7 +194,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
     /*
     * @dev Creates the token to be sold.
-    * @returns MintableToken
+    * @returns MintableToken Return instance of the MowjowToken
     */
     function createTokenContract() internal returns (MintableToken) {
         mowjowToken = new MowjowToken('MowjowToken', 'MJT', 18, 75 * 1e8);
@@ -192,7 +202,9 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         return mowjowToken;
     }
 
-    // send ether to the fund collection wallet
+    /*
+    * @dev Send ether to the fund collection wallet
+    */
     function forwardFunds() internal {
         wallet.transfer(msg.value);
     }
@@ -200,7 +212,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     /*
     * @dev The overriding function from zeppelin-solidity/contracts/crowdsale/FinalizableCrowdsale.sol 
     * should call super.finalization() to ensure the chain of finalization is executed entirely.
-    * 
+    * Calculate and send tokens to funds from whitelist paper
     */
     function finalization() internal {
         mowjowToken.changeStatusFinalized();

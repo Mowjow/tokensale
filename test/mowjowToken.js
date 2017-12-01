@@ -1,7 +1,6 @@
 const expectThrow = require('./helpers/expectThrow');
 const params = require('../migrations/config.json');
 const MowjowToken = artifacts.require('./MowjowToken.sol');
-const MowjowCrowdsale = artifacts.require('./MowjowCrowdsale.sol');
 
 contract('MowjowToken', function (accounts) {
     let token;

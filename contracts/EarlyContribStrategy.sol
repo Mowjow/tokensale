@@ -3,6 +3,11 @@ pragma solidity ^0.4.11;
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./PricingStrategy.sol";
 
+
+/**
+* @title EarlyContribStrategy
+* @dev Pricing strategy for early contributors *
+*/
 contract  EarlyContribStrategy is PricingStrategy {
     using SafeMath for uint256;
  
@@ -11,12 +16,9 @@ contract  EarlyContribStrategy is PricingStrategy {
     uint256 bonus;
     uint256 maxCap;
 
-    event TokenForEarlyContributors(uint256 _token, uint256 _tokenAndBonus, uint256 _bonusRate);
-
     /*
     * @dev Constructor
-    * // MAX CAP IN TOKENS ETC
-    * @return uint256 Return rate of bonus for an investor
+    * MAX CAP IN TOKENS ETC
     */
     function EarlyContribStrategy(uint256 _bonus, uint _maxCap, uint _rate) public {
         bonus = _bonus;
@@ -27,16 +29,14 @@ contract  EarlyContribStrategy is PricingStrategy {
 
     /*
     * @dev set parameters from the crowdsale
-    * @return uint256 Return rate of bonus for an investor
     */
     function setRate(uint256 _rate) public {
         rate = _rate;
     }
 
-    event Test(bool);
     /*
-    * @dev Fetch the rate of bonus
-    * @return uint256 Return rate of bonus for an investor
+    * @dev Count number of tokens with bonuses
+    * @return uint256 Return number of tokens for an investor
     */
     function countTokens(uint256 _value) public returns (uint256) {
 
@@ -51,8 +51,8 @@ contract  EarlyContribStrategy is PricingStrategy {
     }
 
     /*
-    * @dev Check  
-    * @return true if the transaction can buy tokens
+    * @dev Check required of tokens in the tranche
+    * @return true if count of tokens is available
     */ 
     function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool){
         uint256 remainingTokens = maxCap - totalSoldTokens;
@@ -60,7 +60,7 @@ contract  EarlyContribStrategy is PricingStrategy {
     }
 
     /*
-    * @dev Amount of sold tokens
+    * @dev Summing sold of tokens
     */
     function soldInTranche(uint256 tokensAndBonus) public {
         totalSoldTokens += tokensAndBonus;

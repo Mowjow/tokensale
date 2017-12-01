@@ -1,59 +1,35 @@
-const ether = require('./helpers/ether');
-const advanceBlock = require('./helpers/advanceToBlock');
-const increaseTimeTo = require('./helpers/increaseTime').increaseTimeTo;
-const duration = require('./helpers/increaseTime').duration;
-const latestTime = require('./helpers/latestTime');
-const EVMThrow = require('./helpers/EVMThrow');
+const t = require('./helper');
 
-const BigNumber = web3.BigNumber;
+const should = t.should;
 
-const should = require('chai')
-    .use(require('chai-as-promised'))
-    .use(require('chai-bignumber')(BigNumber))
-    .should();
-
-
-const MowjowCrowdsale = artifacts.require('MowjowCrowdsale');
-const MowjowToken = artifacts.require('MowjowToken');
-const EarlyContribStrategy = artifacts.require("EarlyContribStrategy");
-const PreIcoStrategy = artifacts.require("PreIcoStrategy");
-const TrancheStrategy = artifacts.require('TrancheStrategy');
-const FinalizableMowjow = artifacts.require('FinalizableMowjow');
 const PURCHASE_EVENT = 'Purchase';
 
 contract('EarlyContribStrategy', function ([_, investor, wallet, purchaser]) {
-    const cap = ether(0.1);
-    const rate = new BigNumber(40000);
-    const value = ether(0.0000000000000001);
+    const value = t.ether(0.0000000000000001);
 
-    const expectedTokenAmount = rate.mul(value).mul(2); // 100% bonus
+    const expectedTokenAmount = t.rate.mul(value).mul(2); // 100% bonus
 
     before(async function () {
         //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
-        await advanceBlock()
+        await t.advanceBlock()
     });
 
     beforeEach(async function () {
-        this.startTime = latestTime() + duration.weeks(1);
-        this.endTime = this.startTime + duration.weeks(8);
-        this.afterEndTime = this.endTime + duration.weeks(1);
 
-        this.finalizableMowjow = await FinalizableMowjow.deployed();
-        this.earlyContribStrategy = await EarlyContribStrategy.deployed();
-        this.preIcoStrategy = await PreIcoStrategy.new(100, 80000, 40000);
-        this.trancheStrategy = await TrancheStrategy.new([100], [80000], [40000]);
-        this.mowjowCrowdsale = await MowjowCrowdsale.new(
-            this.startTime, this.endTime, rate, wallet, cap,
+        this.earlyContribStrategy = await t.EarlyContribStrategy.deployed();
+        this.preIcoStrategy = await t.PreIcoStrategy.new(100, 80000, 40000);
+        this.trancheStrategy = await t.TrancheStrategy.new([100], [80000], [40000]);
+        this.mowjowCrowdsale = await t.MowjowCrowdsale.new(
+            t.startTime, t.endTime, t.rate, wallet, t.cap,
             this.earlyContribStrategy.address, this.preIcoStrategy.address,
-            this.trancheStrategy.address, this.finalizableMowjow.address);
+            this.trancheStrategy.address, t.finalizableMowjow.address);
 
         let token = await this.mowjowCrowdsale.token();
-        this.token = await MowjowToken.at(token);
+        this.token = await t.MowjowToken.at(token);
     });
 
     describe('payments for early contributors', function () {
         beforeEach(async function () {
-            // increaseTimeTo(this.startTime - duration.days(1))
         });
 
         it('should add investor to early contributor list successfuly', async function () {
@@ -76,9 +52,9 @@ contract('EarlyContribStrategy', function ([_, investor, wallet, purchaser]) {
 
         it('should reject add to early contributor list after end pre ico', async function () {
             await this.mowjowCrowdsale.addWhitelistInvestors(investor, {from: _});
-            await this.mowjowCrowdsale.buyTokens(investor, { value: ether(1), from: purchaser });
+            await this.mowjowCrowdsale.buyTokens(investor, { value: t.ether(1), from: purchaser });
 
-            let res = await this.mowjowCrowdsale.addEarlyContributors(investor, value).should.be.rejectedWith(EVMThrow);
+            await this.mowjowCrowdsale.addEarlyContributors(investor, value).should.be.rejectedWith(t.EVMThrow);
         })
     })
 });

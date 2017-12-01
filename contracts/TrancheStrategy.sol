@@ -5,6 +5,10 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./PricingStrategy.sol";
 
 
+/**
+* @title TrancheStrategy
+* @dev Pricing strategy for investors in the crowdsale time
+*/
 contract  TrancheStrategy is PricingStrategy, Ownable {
     using SafeMath for uint256;
 
@@ -19,17 +23,14 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
         //rate of bonus for current of transhe
         uint256 bonus;
 
-        //Value of tokens avalible the current period
+        //Value of tokens avalable the current period
         uint valueForTranche;
 
         uint rate;
     }
 
     //events for testing
-    event trancheSet(uint256 _tokenForTranchePeriod, uint256 _bonusForTranchePeriod);
-    event AvailableTokens(uint256 freeTokens, uint256 requireTokens, bool hasTokensForSale);
     event TokenForInvestor(uint256 _token, uint256 _tokenAndBonus, uint256 indexOfperiod, uint256 bonusRate);
-    event tokensSoldInTranche(uint256 _tokenForTranchePeriod, uint256 _tokenBonusForTranchePeriod, uint256 _bonusForTranchePeriod);
 
     mapping (uint256 => uint256) public tokenSoldInPeriod;
     uint MAX_TRANCHES = 50;
@@ -39,7 +40,8 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
 
     /*
     * @dev Constructor
-    * @return uint256 Return rate of bonus for an investor
+    * @param _bonuses uint256[] Bonuses in tranches
+    * @param _bonuses uint256[] Bonuses in tranches
     */
     function TrancheStrategy(uint256[] _bonuses, uint[] _valueForTranches, uint[] _rates) {
        require(setTranche(_bonuses, _valueForTranches, _rates));
@@ -54,8 +56,8 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
     }
 
     /*
-    * @dev Fetch the rate of bonus
-    * @return uint256 Return rate of bonus for an investor
+    * @dev Count number of tokens with bonuses
+    * @return uint256 Return number of tokens for an investor
     */
     function countTokens(uint256 _value) public returns (uint256 tokensAndBonus) {
         uint indexOfTranche = defineTranchePeriod();
@@ -74,18 +76,16 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
         tokensAndBonus = tokens.add(bonusToken);
 
         soldInTranche(tokensAndBonus);
-
-//        require(getFreeTokensInTranche(tokens));
         TokenForInvestor(tokens, tokensAndBonus, indexOfTranche, bonusRate);
         return tokensAndBonus;
 
         return 0;
     }
 
-    /*
-    * @dev Check  
-    * @return true if the transaction can buy tokens
-    */ 
+     /*
+     * @dev Check required of tokens in the tranche
+     * @return true if count of tokens is available
+     */
     function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool) {
         bool hasTokens = false;
         uint256 indexOfTranche = defineTranchePeriod();
@@ -95,18 +95,7 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
     }
 
     /*
-    * @dev set parameters of a tranche 
-    * @return uint256 sum
-    */
-    function countRemainingTokens() public returns (uint256 remainingTokens) {
-        for (uint i = 0; i < tranches.length; i++) {
-            remainingTokens += tranches[i].valueForTranche;
-        }
-        return remainingTokens;
-    }
-
-    /*
-    * @dev Sum of sold tokens
+    * @dev Summing sold of tokens
     */
     function soldInTranche(uint256 tokensAndBonus) public {
         uint256 indexOfTranche = defineTranchePeriod();
@@ -115,6 +104,9 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
         totalSoldTokens.add(tokensAndBonus);
     }
 
+    /*
+    * @dev Check sum of the tokens for sale in the tranches in the crowdsale time
+    */
     function isNoEmptyTranches() public returns(bool) {
         uint256 sumFreeTokens = 0;
         for (uint i = 0; i < tranches.length; i++) {
@@ -126,7 +118,7 @@ contract  TrancheStrategy is PricingStrategy, Ownable {
 
     /*
     * @dev set parameters of a tranche 
-    * @return true if succeful setting a tranche
+    * @return true if successful setting a tranche
     */ 
     function setTranche(uint256[] _bonuses, uint[] _valueForTranches, uint[] _rates) public returns(bool) {
         bool canSet = _bonuses.length == _valueForTranches.length && _valueForTranches.length == _rates.length;

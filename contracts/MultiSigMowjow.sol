@@ -70,9 +70,10 @@ contract MultiSigMowjow {
         _;
     }
 
-    // @dev Contract constructor sets initial owners and required number of confirmations.
-    // @param _owners List of initial owners.
-    // @param _required Number of required confirmations.
+    /* @dev Contract constructor sets initial owners and required number of confirmations.
+    * @param _owners List of initial owners.
+    * @param _required Number of required confirmations.
+    */
     function MultiSigMowjow (address[] _owners, uint _required) {
         require(_owners.length > 1);
 
@@ -86,8 +87,9 @@ contract MultiSigMowjow {
 
     }
 
-    // @dev Returns list of owners.
-    // @return List of owner addresses.
+    /* @dev Returns list of owners.
+    *  @return List of owner addresses.
+    */
     function getOwners()
         public
         constant

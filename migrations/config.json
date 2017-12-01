@@ -6,7 +6,7 @@
         "bonus": 100
     },
     "pre_ico": {
-        "token_cap": 6e8,
+        "token_cap": 60000,
         "rate": 40000,
         "bonus": 50
     },
@@ -15,6 +15,14 @@
         "symbol": "MJT",
         "decimals": 18,
         "initial_supply": 7500000000
+    },
+    "test_data": {
+        "valueForTranches": [80000],
+        "rates": [40000],
+        "bonusesIco": [100],
+        "token_cap": 80000,
+        "rate": 40000,
+        "bonus": 100
     },
     "bonusesIco": [35, 20, 5, 0],
     "valueForTranches": [6e8, 6e8, 6e8, 6e8],

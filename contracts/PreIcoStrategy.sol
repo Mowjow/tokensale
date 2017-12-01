@@ -3,6 +3,7 @@ pragma solidity ^0.4.11;
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./PricingStrategy.sol";
 
+
 contract  PreIcoStrategy is PricingStrategy {
     using SafeMath for uint256;
 
@@ -11,12 +12,9 @@ contract  PreIcoStrategy is PricingStrategy {
     uint256 bonus;
     uint256 public maxCap;
 
-    //events for testing  
-    event TokensForWhiteListInvestors(uint256 _token, uint256 _tokenAndBonus, uint256 bonusRate, uint256 totalSoldTokens);
 
     /*
     * @dev Constructor
-    * @return uint256 Return rate of bonus for an investor
     */
     function PreIcoStrategy(uint256 _bonus, uint _maxCap, uint256 _rate) {
         bonus = _bonus;
@@ -33,11 +31,11 @@ contract  PreIcoStrategy is PricingStrategy {
         rate = _rate;
     }
     event TokensAndBonus(uint256, uint256, uint256);
-    /*
-    * @dev Fetch the rate of bonus
-    * @return uint256 Return rate of bonus for an investor
-    */
 
+    /*
+    * @dev Count number of tokens with bonuses
+    * @return uint256 Return number of tokens for an investor
+    */
     function countTokens(uint256 _value) public returns (uint256 tokensAndBonus) {
         uint256 etherInWei = 1e18;
         require(_value >= etherInWei.div(rate));
@@ -58,8 +56,8 @@ contract  PreIcoStrategy is PricingStrategy {
     }
 
     /*
-    * @dev Check  
-    * @return true if the transaction can buy tokens
+    * @dev Check required of tokens in the tranche
+    * @return true if count of tokens is available
     */
     function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool) {
         return (maxCap - totalPreIcoSoldTokens) >= requiredTokens;
@@ -75,7 +73,7 @@ contract  PreIcoStrategy is PricingStrategy {
     }
      
     /*
-    * @dev summing sold of tokens  
+    * @dev Summing sold of tokens
     */ 
     function soldInTranche(uint256 tokens) public {
         totalPreIcoSoldTokens = totalPreIcoSoldTokens.add(tokens);
