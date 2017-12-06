@@ -6,6 +6,9 @@ const TrancheStrategy = artifacts.require("./TrancheStrategy.sol");
 const FinalizableMowjow = artifacts.require("./FinalizableMowjow.sol");
 const MowjowFunds = artifacts.require("./MowjowFunds.sol");
 
+let startDate = new Date('12-15-2017').getTime(); // 1510844468
+let endDate = new Date('12-30-2020').getTime(); // 1513429708
+
 module.exports = function (deployer, network, accounts) {
     return deployer.deploy(Migrations, testData.gasValue)
         .then(res => deployer.deploy(MowjowFunds, testData.gasValue))
@@ -27,10 +30,13 @@ module.exports = function (deployer, network, accounts) {
             testData.test_data.token_cap, testData.test_data.rate, testData.gasValue))
         .then(async res => {
             return PreIcoStrategy.deployed()
-                .then(function () {
+                .then(async function (preIco) {
+                    await preIco.setEndDate(endDate);
+                    let date = await preIco.endTime();
                     return TrancheStrategy.deployed();
                 })
-                .then(function () {
+                .then(async function (tranche) {
+                    await tranche.setEndDate(endDate);
                     return FinalizableMowjow.deployed();
                 })
                 .then(function () {

@@ -74,10 +74,9 @@ contract MultiSigMowjow {
     * @param _owners List of initial owners.
     * @param _required Number of required confirmations.
     */
-    function MultiSigMowjow (address[] _owners, uint _required) {
+    function MultiSigMowjow (address[] _owners, uint _required) public {
         require(_owners.length > 1);
 
-        address lastAdd = address(0); 
         for (uint i = 0; i < _owners.length; i++) {
             require(isOwner[_owners[i]] || _owners[i] != 0); 
             isOwner[_owners[i]] = true;

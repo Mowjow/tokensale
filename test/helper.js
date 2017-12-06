@@ -4,6 +4,7 @@ module.exports.increaseTimeTo = require('./helpers/increaseTime').increaseTimeTo
 module.exports.duration = require('./helpers/increaseTime').duration;
 module.exports.latestTime = require('./helpers/latestTime');
 module.exports.EVMThrow = require('./helpers/EVMThrow');
+module.exports.EVMRevert = require('./helpers/EVMRevert');
 module.exports.BigNumber = web3.BigNumber;
 module.exports.should = require('chai')
     .use(require('chai-as-promised'))

@@ -11,6 +11,6 @@ module.exports = async function (deployer, network, accounts) {
     let endDate = new Date('12-30-2020').getTime(); // 1513429708
 
     await deployer.deploy(MowjowCrowdsale, startDate, endDate, 15000, accounts[1], 15000,
-            EarlyContribStrategy.address, PreIcoStrategy.address, TrancheStrategy.address,
-            FinalizableMowjow.address, {gas: 99999999, from: accounts[0]});
+        EarlyContribStrategy.address, PreIcoStrategy.address, TrancheStrategy.address,
+        FinalizableMowjow.address, {gas: 99999999, from: accounts[0]});
 };

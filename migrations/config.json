@@ -1,5 +1,7 @@
 {
-
+    "crowdsale": {
+        "end_date": 1609279200000
+    },
     "early_contributors": {
         "token_cap": 480000000,
         "rate": 40000,

@@ -7,6 +7,7 @@ You need to have **Truffle** installed to run this project.
 2. `npm install`
 3. `npm run test-net` for start test net rpc
 4. `npm run ropsten` for start [Ropsten test net](https://ropsten.etherscan.io/)
+4. `truffle migrate --network ropsten` for migrate to [Ropsten test net](https://ropsten.etherscan.io/)
 
 ## How to test (for now running full test suite is impossible)
  `truffle test <path/to/test/file>`

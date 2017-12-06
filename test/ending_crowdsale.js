@@ -1,5 +1,4 @@
 const t = require('./helper');
-
 const should = t.should;
 
 contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
@@ -36,7 +35,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
             hasEnded.should.equal(false);
             await t.increaseTimeTo(this.afterEndTime);
             await this.mowjowCrowdsale.buyTokens(investor,
-                { from: purchaser, value: t.value }).should.be.rejectedWith(t.EVMThrow);
+                { from: purchaser, value: t.value }).should.be.rejectedWith(t.EVMRevert);
         });
     })
 });

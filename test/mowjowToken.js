@@ -1,6 +1,8 @@
 const expectThrow = require('./helpers/expectThrow');
 const params = require('../migrations/config.json');
 const MowjowToken = artifacts.require('./MowjowToken.sol');
+const t = require('./helper');
+const should = t.should;
 
 contract('MowjowToken', function (accounts) {
     let token;
@@ -48,6 +50,6 @@ contract('MowjowToken', function (accounts) {
     it('should fail to mint after call to finishMinting', async function () {
         await token.finishMinting();
         assert.equal(await token.mintingFinished(), true);
-        await expectThrow(token.mint(accounts[0], 100));
+        await expectThrow(token.mint(accounts[0], 100)).should.be.rejectedWith(t.EVMRevert);;
     })
 });

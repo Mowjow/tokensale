@@ -10,6 +10,9 @@ contract MowjowToken is MintableToken {
     uint public decimals;
     bool hasFinalized;
 
+    /*
+    * @dev For unavailable transfer of tokens till owner have changed status
+    */
     modifier onlyFinalized() {
         require(hasFinalized);
         _;
@@ -23,14 +26,23 @@ contract MowjowToken is MintableToken {
         hasFinalized = false;
     }
 
+    /*
+    * @dev Can use if owner changed status for available transfer
+    */
     function transfer(address _to, uint256 _value) public onlyFinalized returns (bool) {
         return super.transfer(_to, _value);
     }
 
+    /*
+    * @dev Can use if owner changed status for available transfer
+    */
     function transferFrom(address _from, address _to, uint256 _value) public onlyFinalized returns (bool) {
         return super.transferFrom(_from, _to, _value);
     }
 
+    /*
+    * @dev Change status of tokens for available transfer
+    */
     function changeStatusFinalized() public onlyOwner {
         hasFinalized = true;
     }

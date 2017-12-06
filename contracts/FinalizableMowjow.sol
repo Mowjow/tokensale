@@ -1,9 +1,10 @@
 pragma solidity ^0.4.11;
 
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Finalizable.sol";
 import "./MowjowFunds.sol";
 import "./MowjowToken.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
+
 
 
 /**
@@ -24,7 +25,7 @@ contract FinalizableMowjow is Finalizable {
     }
 
 
-    function doFinalization(uint256 _longTermReserve, uint256 _rewardsEngine, uint256 _team) public returns(bool) {
+    function doFinalization(uint256 _longTermReserve, uint256 _rewardsEngine, uint256 _team) public onlyOwner returns(bool) {
         require(!isFinishedCrowdsale);
 
         // 0 - longTermReserve
@@ -38,6 +39,4 @@ contract FinalizableMowjow is Finalizable {
         return isFinishedCrowdsale;
     }
 
-    function sendTokensToGroup(uint256 tokensForGroup, address walletOfGroup) internal returns(bool) {
-    }
 }

@@ -8,35 +8,27 @@ contract  PreIcoStrategy is PricingStrategy {
     using SafeMath for uint256;
 
     uint256 public rate;
-    uint256 public totalPreIcoSoldTokens;
     uint256 bonus;
     uint256 public maxCap;
 
+    //events for testing
+    event TokenForPreIcoInvestor(uint256 _token, uint256 _tokenAndBonus, uint256 bonusRate);
 
     /*
     * @dev Constructor
     */
-    function PreIcoStrategy(uint256 _bonus, uint _maxCap, uint256 _rate) {
+    function PreIcoStrategy(uint256 _bonus, uint _maxCap, uint256 _rate) public {
         bonus = _bonus;
         maxCap = _maxCap;
         rate = _rate;
-        totalPreIcoSoldTokens = 0;
     }
 
-    /*
-    * @dev set parameters from the crowdsale 
-    * @return uint256 Return rate of bonus for an investor
-    */
-    function setRate(uint256 _rate) public {
-        rate = _rate;
-    }
-    event TokensAndBonus(uint256, uint256, uint256);
 
     /*
     * @dev Count number of tokens with bonuses
     * @return uint256 Return number of tokens for an investor
     */
-    function countTokens(uint256 _value) public returns (uint256 tokensAndBonus) {
+    function countTokens(uint256 _value) public onlyCrowdsale returns (uint256 tokensAndBonus) {
         uint256 etherInWei = 1e18;
         require(_value >= etherInWei.div(rate));
 
@@ -48,34 +40,35 @@ contract  PreIcoStrategy is PricingStrategy {
 
         if(freeTokens >= tokensAndBonus) {
             soldInTranche(tokensAndBonus);
+            TokenForPreIcoInvestor(tokens, tokensAndBonus, rate);
         } else {
             require(false);
         }
-
         return tokensAndBonus;
     }
 
     /*
     * @dev Check required of tokens in the tranche
-    * @return true if count of tokens is available
+    * @param _requiredTokens uint256 Number of tokens
+    * @return boolean Return true if count of tokens is available
     */
-    function getFreeTokensInTranche(uint256 requiredTokens) public returns (bool) {
-        return (maxCap - totalPreIcoSoldTokens) >= requiredTokens;
+    function getFreeTokensInTranche(uint256 requiredTokens) internal constant returns (bool) {
+        return (maxCap - totalSoldTokens) >= requiredTokens;
     } 
 
-    function getUnSoldTokens() public returns (uint256) {
-        return maxCap - totalPreIcoSoldTokens;
+    function getUnSoldTokens() public constant returns (uint256) {
+        return maxCap - totalSoldTokens;
     }
 
-    function isNoEmptyPreIcoTranche() public returns (bool) {
-        uint256 availableTokens = maxCap - totalPreIcoSoldTokens;
+    function isNoEmptyTranches() public constant returns(bool) {
+        uint256 availableTokens = maxCap - totalSoldTokens;
         return availableTokens > 0 && now <= endTime;
     }
      
     /*
     * @dev Summing sold of tokens
     */ 
-    function soldInTranche(uint256 tokens) public {
-        totalPreIcoSoldTokens = totalPreIcoSoldTokens.add(tokens);
+    function soldInTranche(uint256 tokens) internal {
+        totalSoldTokens = totalSoldTokens.add(tokens);
     }
 }

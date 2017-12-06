@@ -1,5 +1,4 @@
 const t = require('./helper');
-
 const should = t.should;
 
 contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
@@ -33,7 +32,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
 
         it('should fail with zero cap', async function () {
             await t.MowjowCrowdsale.new(this.startTime, this.endTime, t.rate, wallet, 0)
-                .should.be.rejectedWith(t.EVMThrow);
+                .should.be.rejectedWith(t.EVMRevert);
         })
 
     });
@@ -47,7 +46,7 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
 
         it('should reject payments when amount of investor is zero', async function () {
             await this.mowjowCrowdsale.buyTokens(investor, { value: 0, from: purchaser })
-                .should.be.rejectedWith(t.EVMThrow);
+                .should.be.rejectedWith(t.EVMRevert);
         });
 
         it('should be ended only after end date', async function () {
