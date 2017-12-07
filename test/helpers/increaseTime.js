@@ -34,7 +34,7 @@ function increaseTime(duration) {
  * @param target time in seconds
  */
 exports.increaseTimeTo = (target) => {
-  let now = latestTime(); // 1970
+  let now = latestTime();
   if (target < now) {
       throw Error(`Cannot increase current time(${now}) to a moment in the past(${target})`);
   }

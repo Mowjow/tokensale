@@ -5,6 +5,7 @@ contract('MultiSigMowjow', function ([_, investor1, investor2, investor3, invest
      const value = t.ether(0.0000000000000001);
 
     beforeEach(async function () {
+        await t.advanceBlock();
         this.multiSigMowjow = await t.MultiSigMowjow.deployed();
     });
 
@@ -12,12 +13,12 @@ contract('MultiSigMowjow', function ([_, investor1, investor2, investor3, invest
 
         it('should success init multisig wallet with 6 owners', async function () {
             const expectedRequired = 4;
-            let multiSig = await t.MultiSigMowjow.new([investor1, investor2, investor3, investor4, investor5, investor6], expectedRequired)
+            let multiSig = await t.MultiSigMowjow.new([investor1, investor2, investor3, investor4, investor5, investor6], expectedRequired);
             let owners = await multiSig.getOwners();
             let requiredConfirmations = await multiSig.required();
             let countOwners = await owners.length;
             countOwners.should.be.bignumber.equal(6);
-            requiredConfirmations.should.be.bignumber.equal(expectedRequired)
+            requiredConfirmations.should.be.bignumber.equal(expectedRequired);
         });
 
         it('should accept payments to multisig', async function () {
@@ -36,10 +37,8 @@ contract('MultiSigMowjow', function ([_, investor1, investor2, investor3, invest
         });
 
         it('should payment from multisig', async function () {
-            let startBalance,
-                valueForsend = value.div(50),
+            let valueForsend = value.div(50),
                 balance,
-                hasConfirmed = false;
                 expectBalance = web3.eth.getBalance(resiver).add(valueForsend);
 
             await this.multiSigMowjow.send(value, { from: purchaser });
@@ -57,7 +56,7 @@ contract('MultiSigMowjow', function ([_, investor1, investor2, investor3, invest
             hasConfirmed.should.be.equal(true);
             balance = web3.eth.getBalance(resiver);
             balance.should.be.bignumber.equal(expectBalance);
-            
+
         });
 
         it('should reject with no owner address', async function () {

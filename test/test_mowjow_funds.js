@@ -6,6 +6,7 @@ contract('MowjowFunds', function ([_, investor]) {
     let tokenParams = params.mowjow_token;
 
     beforeEach(async function () {
+        await t.advanceBlock();
         this.token = await t.MowjowToken.new(tokenParams.name, tokenParams.symbol,
             tokenParams.decimals, tokenParams.initial_supply);
         this.mowjowFunds = await t.MowjowFunds.deployed();

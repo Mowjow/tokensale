@@ -27,11 +27,17 @@ module.exports.value = this.ether(1);
 module.exports.startTime = this.latestTime() + this.duration.weeks(1);
 module.exports.endTime = this.startTime + this.duration.weeks(8);
 module.exports.afterEndTime = this.endTime + this.duration.seconds(1);
-module.exports.mowjowFunds = this.MowjowFunds.deployed();
-module.exports.finalizableMowjow = this.FinalizableMowjow.deployed();
-module.exports.earlyContribStrategy = this.EarlyContribStrategy.deployed();
-module.exports.multiSigMowjow = this.MultiSigMowjow.deployed();
+
+
 module.exports.preIcoStrategy = this.PreIcoStrategy.new(100, 80000, 40000);
 module.exports.trancheStrategy = this.TrancheStrategy.new([100, 100], [80000, 80000], [40000, 40000]);
 
 
+let f = async () => {
+    module.exports.multiSigMowjow = await this.MultiSigMowjow.deployed();
+    module.exports.mowjowFunds = await this.MowjowFunds.deployed();
+    module.exports.earlyContribStrategy = await this.EarlyContribStrategy.deployed();
+    module.exports.finalizableMowjow = await this.FinalizableMowjow.deployed();
+};
+
+f();

@@ -4,6 +4,7 @@ const should = t.should;
 contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
 
     before(async function () {
+        await t.advanceBlock();
     });
 
     beforeEach(async function () {
@@ -20,22 +21,22 @@ contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
         this.token = t.MowjowToken.at(await this.mowjowCrowdsale.token());
     });
 
-    describe('ending time finished', function () {
-
-        it('should not be ended if time of the crowdsale', async function () {
-            let hasEnded = await this.mowjowCrowdsale.hasEnded();
-            hasEnded.should.equal(false);
-            await t.increaseTimeTo(this.afterEndTime);
-            hasEnded = await this.mowjowCrowdsale.hasEnded();
-            hasEnded.should.equal(true);
-        });
-
-        it('should rejected after end time the crowdsale', async function () {
-            let hasEnded = await this.mowjowCrowdsale.hasEnded();
-            hasEnded.should.equal(false);
-            await t.increaseTimeTo(this.afterEndTime);
-            await this.mowjowCrowdsale.buyTokens(investor,
-                { from: purchaser, value: t.value }).should.be.rejectedWith(t.EVMRevert);
-        });
-    })
+    // describe('ending time finished', function () {
+    //
+    //     it('should not be ended if time of the crowdsale', async function () {
+    //         let hasEnded = await this.mowjowCrowdsale.hasEnded();
+    //         hasEnded.should.equal(false);
+    //         await t.increaseTimeTo(this.afterEndTime);
+    //         hasEnded = await this.mowjowCrowdsale.hasEnded();
+    //         hasEnded.should.equal(true);
+    //     });
+    //
+    //     it('should rejected after end time the crowdsale', async function () {
+    //         let hasEnded = await this.mowjowCrowdsale.hasEnded();
+    //         hasEnded.should.equal(false);
+    //         await t.increaseTimeTo(this.afterEndTime);
+    //         await this.mowjowCrowdsale.buyTokens(investor,
+    //             { from: purchaser, value: t.value }).should.be.rejectedWith(t.EVMRevert);
+    //     });
+    // })
 });

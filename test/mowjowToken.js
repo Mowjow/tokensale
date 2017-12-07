@@ -9,6 +9,7 @@ contract('MowjowToken', function (accounts) {
     let tokenParams = params.mowjow_token;
 
     beforeEach(async function () {
+        await t.advanceBlock();
         token = await MowjowToken.new(tokenParams.name, tokenParams.symbol,
             tokenParams.decimals, tokenParams.initial_supply);
     });

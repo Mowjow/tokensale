@@ -4,6 +4,7 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Finalizable.sol";
 import "./MowjowFunds.sol";
 import "./MowjowToken.sol";
+import "./CrowdsaleHelper.sol";
 
 
 
@@ -12,12 +13,11 @@ import "./MowjowToken.sol";
  * @dev Extension of Crowdsale where an owner can do extra work after crowdsale is finished.
  *
 */
-contract FinalizableMowjow is Finalizable {
+contract FinalizableMowjow is Finalizable, CrowdsaleHelper {
     using SafeMath for uint256;
 
     bool public isFinishedCrowdsale;
     MowjowFunds public tokenWallet;
-
 
     function FinalizableMowjow(address _tokenWallet) public {
         tokenWallet = MowjowFunds(_tokenWallet);
@@ -25,7 +25,7 @@ contract FinalizableMowjow is Finalizable {
     }
 
 
-    function doFinalization(uint256 _longTermReserve, uint256 _rewardsEngine, uint256 _team) public onlyOwner returns(bool) {
+    function doFinalization(uint256 _longTermReserve, uint256 _rewardsEngine, uint256 _team) public onlyCrowdsale returns(bool) {
         require(!isFinishedCrowdsale);
 
         // 0 - longTermReserve

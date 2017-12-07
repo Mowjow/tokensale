@@ -91,7 +91,6 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
         if(currentState == State.PreFunding) {
             bool isValid = isInList(_beneficiary, whitelistInvestors);
-
             require(isValid);
             strategy = preIcoStrategy;
         } else if(currentState == State.Funding) {
@@ -150,13 +149,14 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         earlyContributors.push(_investor);
         Purchase(msg.sender, _investor, _payments, tokensAmount);
     }
-
+    event st(uint256 st);
     /*
     *  @dev Add Whitelist investor to list
     *  @param investor address Whitelist investor's address
     */
     function addWhitelistInvestors(address _investor) public onlyOwner {
         require(isNewInvestor(_investor, whitelistInvestors));
+        st(now);
         require((getState() == State.PreFunding));
         whitelistInvestors.push(_investor);
     }
