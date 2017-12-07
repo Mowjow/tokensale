@@ -19,9 +19,9 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
     MowjowToken mowjowToken;    
     FinalizableMowjow public finalizableMowjow;
-    TrancheStrategy trancheStrategy; 
-    EarlyContribStrategy earlyContribStrategy; 
-    PreIcoStrategy preIcoStrategy;
+    TrancheStrategy public trancheStrategy;
+    EarlyContribStrategy public earlyContribStrategy;
+    PreIcoStrategy public preIcoStrategy;
 
     address[] public earlyContributors;
     address[] public whitelistInvestors; 
