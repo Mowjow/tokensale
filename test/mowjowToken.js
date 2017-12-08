@@ -1,56 +1,57 @@
 const expectThrow = require('./helpers/expectThrow');
-const params = require('../migrations/config.json');
 const MowjowToken = artifacts.require('./MowjowToken.sol');
-const t = require('./helper');
-const should = t.should;
+const helper = require('./helper');
+
+const tokenParams = {
+    name: 'SomeToken',
+    symbol: 'Symb',
+    decimals: 18,
+    initial_supply: 1
+};
 
 contract('MowjowToken', function (accounts) {
-    let token;
-    let tokenParams = params.mowjow_token;
 
     beforeEach(async function () {
-        await t.advanceBlock();
-        token = await MowjowToken.new(tokenParams.name, tokenParams.symbol,
+        await helper.advanceBlock();
+        this.token = await MowjowToken.new(tokenParams.name, tokenParams.symbol,
             tokenParams.decimals, tokenParams.initial_supply);
     });
 
     it('should start with correct params', async function () {
 
-        let name = await token.name(),
-            symbol = await token.symbol(),
-            decimals = await token.decimals(),
-            totalSupply = await token.totalSupply();
+        const name = await this.token.name(),
+            symbol = await this.token.symbol(),
+            decimals = await this.token.decimals();
 
         assert.equal(name, tokenParams.name);
         assert.equal(symbol, tokenParams.symbol);
         assert.equal(decimals, tokenParams.decimals);
-        assert.equal(totalSupply.toNumber(), tokenParams.initial_supply);
     });
 
     it('should return mintingFinished false after construction', async function () {
-        let mintingFinished = await token.mintingFinished();
+        let mintingFinished = await this.token.mintingFinished();
 
         assert.equal(mintingFinished, false);
     });
 
     it('should mint a given amount of tokens to a given address', async function () {
-        const result = await token.mint(accounts[0], 100);
+        const result = await this.token.mint(accounts[0], 100);
         assert.equal(result.logs[0].event, 'Mint');
         assert.equal(result.logs[0].args.to.valueOf(), accounts[0]);
         assert.equal(result.logs[0].args.amount.valueOf(), 100);
         assert.equal(result.logs[1].event, 'Transfer');
         assert.equal(result.logs[1].args.from.valueOf(), 0x0);
 
-        let balance0 = await token.balanceOf(accounts[0]);
+        let balance0 = await this.token.balanceOf(accounts[0]);
         assert(balance0, 100);
 
-        let totalSupply = await token.totalSupply();
+        let totalSupply = await this.token.totalSupply();
         assert(totalSupply, 100);
     });
 
     it('should fail to mint after call to finishMinting', async function () {
-        await token.finishMinting();
-        assert.equal(await token.mintingFinished(), true);
-        await expectThrow(token.mint(accounts[0], 100)).should.be.rejectedWith(t.EVMRevert);;
+        await this.token.finishMinting();
+        assert.equal(await this.token.mintingFinished(), true);
+        await expectThrow(this.token.mint(accounts[0], 100)).should.be.rejectedWith(helper.EVMRevert);
     })
 });

@@ -1,6 +1,4 @@
 const helper = require('./helper');
-const should = helper.should;
-const config = require('../migrations/config.json');
 
 const MowjowCrowdsale = artifacts.require('MowjowCrowdsale'),
     MowjowToken = artifacts.require('MowjowToken'),
@@ -33,32 +31,24 @@ const setupParams = {
     }
 };
 
-
-contract('PreIcoStrategy', function ([_, investor, wallet, purchaser]) {
+contract('MowjowCrowdsale', function ([_, investor, wallet, purchaser]) {
 
     before(async function () {
         await helper.advanceBlock();
-
-        const rate = 40000;
         const startTime = helper.latestTime() + helper.duration.weeks(1),
             endTime = startTime + helper.duration.weeks(8),
             afterEndTime = endTime + helper.duration.weeks(8);
 
         this.crowdsaleParams = {
             rate: 1,
-            cap: helper.ether(1),
+            cap: helper.ether(3),
             start_time: startTime,
             end_time: endTime,
             after_end_time: afterEndTime
         };
-
-        this.val = helper.ether(1).mul(0.5);
-        this.PURCHASE_EVENT = 'Purchase';
-        this.expectedTokenAmount = new helper.BigNumber(rate).mul(2);
     });
 
     beforeEach(async function () {
-
         const preIcoStrategy = await PreIcoStrategy.new(
             setupParams.pre_ico.bonus,
             setupParams.pre_ico.amount,
@@ -71,59 +61,51 @@ contract('PreIcoStrategy', function ([_, investor, wallet, purchaser]) {
             setupParams.tranche_strategy.rate
         );
 
-        const mowjowFunds = await MowjowFunds.deployed();
-        const finalizableMowjow = await FinalizableMowjow.new(mowjowFunds.address);
+        const mowjowFunds = await MowjowFunds.new();
+        this.finalizableMowjow = await FinalizableMowjow.new(mowjowFunds.address);
 
         await preIcoStrategy.setEndDate(this.crowdsaleParams.end_time);
         await trancheStrategy.setEndDate(this.crowdsaleParams.end_time);
 
         const earlyContribStrategy = await EarlyContribStrategy.new(
-            config.early_contributors.bonus, config.early_contributors.token_cap,
-            config.early_contributors.rate
+            setupParams.early_contributors.bonus, setupParams.early_contributors.amount,
+            setupParams.early_contributors.rate
         );
 
         this.mowjowCrowdsale = await MowjowCrowdsale.new(
             this.crowdsaleParams.start_time, this.crowdsaleParams.end_time,
             this.crowdsaleParams.rate, wallet, this.crowdsaleParams.cap,
             earlyContribStrategy.address, preIcoStrategy.address,
-            trancheStrategy.address, finalizableMowjow.address
+            trancheStrategy.address, this.finalizableMowjow.address
         );
 
         const mowjowCrowdsaleAddress = this.mowjowCrowdsale.address;
         await preIcoStrategy.setCrowdsaleAddress(mowjowCrowdsaleAddress);
         await trancheStrategy.setCrowdsaleAddress(mowjowCrowdsaleAddress);
         await earlyContribStrategy.setCrowdsaleAddress(mowjowCrowdsaleAddress);
+        await this.finalizableMowjow.setCrowdsaleAddress(mowjowCrowdsaleAddress);
+
+        const actionOwners = [this.finalizableMowjow.address, _];
+        await mowjowFunds.setActionOwners(actionOwners, {from: _});
 
         const tokenInstance = await this.mowjowCrowdsale.token();
         this.token = await MowjowToken.at(tokenInstance);
-
     });
 
-    describe('payments in pre ico for whitelist investors', function () {
+    describe('ending time finished', function () {
 
-        it('should add investor to whitelist successfully and permission for invest', async function () {
-            await this.mowjowCrowdsale.addWhitelistInvestors(investor);
-            const {logs} = await this.mowjowCrowdsale.buyTokens(investor, {value: this.val, from: purchaser});
-            const event = logs.find(e => e.event === this.PURCHASE_EVENT);
-            should.exist(event);
-            event.args.beneficiary.should.be.bignumber.equal(investor);
-            event.args.value.should.be.bignumber.equal(this.val);
-        });
+        it('should not be ended if time of the crowdsale', async function () {
+            let hasEnded = await this.mowjowCrowdsale.hasEnded();
+            hasEnded.should.equal(false);
+            await helper.increaseTimeTo(this.crowdsaleParams.after_end_time);
+            hasEnded = await this.mowjowCrowdsale.hasEnded();
+            hasEnded.should.equal(true);
 
-        it('should test % bonus for  whitelist investor ', async function () {
-            let fundValue = helper.ether(1);
-            await this.mowjowCrowdsale.addWhitelistInvestors(purchaser);
+            await this.mowjowCrowdsale.buyTokens(investor,
+                { from: purchaser, value: helper.ether(1) }).should.be.rejectedWith(helper.EVMRevert);
 
-            const {logs} = await this.mowjowCrowdsale.buyTokens(purchaser, {value: fundValue, from: purchaser});
-            const event = logs.find(e => e.event === this.PURCHASE_EVENT);
-            should.exist(event);
-            event.args.beneficiary.should.be.bignumber.equal(purchaser);
-            event.args.value.should.be.bignumber.equal(fundValue);
-            event.args.amount.should.be.bignumber.equal(this.expectedTokenAmount);
-
-            const balance = await this.token.balanceOf(purchaser);
-            balance.should.be.bignumber.equal(this.expectedTokenAmount);
+            let ended = await this.mowjowCrowdsale.hasEnded();
+            ended.should.equal(true);
         });
     })
-
 });

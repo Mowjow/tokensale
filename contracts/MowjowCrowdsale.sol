@@ -19,9 +19,9 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
     MowjowToken mowjowToken;    
     FinalizableMowjow public finalizableMowjow;
-    TrancheStrategy trancheStrategy; 
-    EarlyContribStrategy earlyContribStrategy; 
-    PreIcoStrategy preIcoStrategy;
+    TrancheStrategy public trancheStrategy;
+    EarlyContribStrategy public earlyContribStrategy;
+    PreIcoStrategy public preIcoStrategy;
 
     address[] public earlyContributors;
     address[] public whitelistInvestors; 
@@ -77,6 +77,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         earlyContribStrategy = _strategy;
     }
 
+
     /*
     * @dev This method has been overridden from crowdsale
     * buying tokens for any prise strategy
@@ -99,7 +100,6 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         uint256 tokensAmount = strategy.countTokens(msg.value);
         mowjowToken.mint(_beneficiary, tokensAmount);
         weiRaised = weiRaised.add(msg.value);
-
         forwardFunds();
         Purchase(msg.sender, _beneficiary, msg.value, tokensAmount);
 
@@ -149,14 +149,13 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         earlyContributors.push(_investor);
         Purchase(msg.sender, _investor, _payments, tokensAmount);
     }
-    event st(uint256 st);
+
     /*
     *  @dev Add Whitelist investor to list
     *  @param investor address Whitelist investor's address
     */
     function addWhitelistInvestors(address _investor) public onlyOwner {
         require(isNewInvestor(_investor, whitelistInvestors));
-        st(now);
         require((getState() == State.PreFunding));
         whitelistInvestors.push(_investor);
     }
@@ -229,9 +228,11 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     * should call super.finalization() to ensure the chain of finalization is executed entirely.
     * Calculate and send tokens to funds from whitelist paper
     */
+
     function finalization() internal {
         mowjowToken.changeStatusFinalized();
-        uint256 totalTokens =  mowjowToken.totalSupply();
+        uint256 totalTokens =  mowjowToken.initialSupply();
+
         uint256 earlyContributorsTokens =  earlyContribStrategy.totalSoldTokens();
         uint256 preIcoTokens =  preIcoStrategy.totalSoldTokens();
         uint256 trancheTokens = trancheStrategy.totalSoldTokens();

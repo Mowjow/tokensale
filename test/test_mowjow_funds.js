@@ -1,15 +1,22 @@
-const params = require('../migrations/config.json');
-const t = require('./helper');
-const should = t.should;
+const helper = require('./helper');
+const MowjowToken = artifacts.require('./MowjowToken.sol');
+const MowjowFunds = artifacts.require('./MowjowFunds.sol');
+const should = helper.should;
+
+const tokenParams = {
+    name: 'SomeToken',
+    symbol: 'Symb',
+    decimals: 18,
+    initial_supply: 1
+};
 
 contract('MowjowFunds', function ([_, investor]) {
-    let tokenParams = params.mowjow_token;
 
     beforeEach(async function () {
-        await t.advanceBlock();
-        this.token = await t.MowjowToken.new(tokenParams.name, tokenParams.symbol,
+        await helper.advanceBlock();
+        this.token = await MowjowToken.new(tokenParams.name, tokenParams.symbol,
             tokenParams.decimals, tokenParams.initial_supply);
-        this.mowjowFunds = await t.MowjowFunds.deployed();
+        this.mowjowFunds = await MowjowFunds.deployed();
     });
 
     describe('payments in mowjow Funds', function () {

@@ -1,43 +1,67 @@
-module.exports.ether = require('./helpers/ether');
-module.exports.advanceBlock = require('./helpers/advanceToBlock');
-module.exports.increaseTimeTo = require('./helpers/increaseTime').increaseTimeTo;
-module.exports.duration = require('./helpers/increaseTime').duration;
-module.exports.latestTime = require('./helpers/latestTime');
-module.exports.EVMThrow = require('./helpers/EVMThrow');
-module.exports.EVMRevert = require('./helpers/EVMRevert');
-module.exports.BigNumber = web3.BigNumber;
-module.exports.should = require('chai')
+exports.ether = require('./helpers/ether');
+exports.advanceBlock = require('./helpers/advanceToBlock');
+exports.increaseTimeTo = require('./helpers/increaseTime').increaseTimeTo;
+exports.duration = require('./helpers/increaseTime').duration;
+exports.latestTime = require('./helpers/latestTime');
+exports.EVMThrow = require('./helpers/EVMThrow');
+exports.EVMRevert = require('./helpers/EVMRevert');
+exports.BigNumber = web3.BigNumber;
+exports.should = require('chai')
     .use(require('chai-as-promised'))
     .use(require('chai-bignumber')(this.BigNumber))
     .should();
 
-module.exports.MowjowCrowdsale = artifacts.require('MowjowCrowdsale');
-module.exports.MowjowToken = artifacts.require('MowjowToken');
-module.exports.EarlyContribStrategy = artifacts.require("EarlyContribStrategy");
-module.exports.PreIcoStrategy = artifacts.require("PreIcoStrategy");
-module.exports.TrancheStrategy = artifacts.require('TrancheStrategy');
-module.exports.FinalizableMowjow = artifacts.require('FinalizableMowjow');
-module.exports.MultiSigMowjow = artifacts.require('MultiSigMowjow');
-module.exports.MowjowFunds = artifacts.require('MowjowFunds');
-module.exports.cap = this.ether(0.1);
-module.exports.rate = new this.BigNumber(40000);
-module.exports.value = this.ether(1);
+const MowjowCrowdsale = artifacts.require('MowjowCrowdsale'),
+    MowjowToken = artifacts.require('MowjowToken'),
+    EarlyContribStrategy = artifacts.require("EarlyContribStrategy"),
+    PreIcoStrategy = artifacts.require("PreIcoStrategy"),
+    TrancheStrategy = artifacts.require('TrancheStrategy'),
+    FinalizableMowjow = artifacts.require('FinalizableMowjow'),
+    MultiSigMowjow = artifacts.require('MultiSigMowjow'),
+    MowjowFunds = artifacts.require('MowjowFunds');
 
+exports.setupCrowdsaleSuite = async function(setupParams, crowdsaleParams, _, wallet) {
+    const preIcoStrategy = await PreIcoStrategy.new(
+        setupParams.pre_ico.bonus,
+        setupParams.pre_ico.amount,
+        setupParams.pre_ico.rate
+    );
 
-module.exports.startTime = this.latestTime() + this.duration.weeks(1);
-module.exports.endTime = this.startTime + this.duration.weeks(8);
-module.exports.afterEndTime = this.endTime + this.duration.seconds(1);
+    const trancheStrategy = await TrancheStrategy.new(
+        setupParams.tranche_strategy.bonus,
+        setupParams.tranche_strategy.amount,
+        setupParams.tranche_strategy.rate
+    );
 
+    const mowjowFunds = await MowjowFunds.new();
+    const finalizableMowjow = await FinalizableMowjow.new(mowjowFunds.address);
 
-module.exports.preIcoStrategy = this.PreIcoStrategy.new(100, 80000, 40000);
-module.exports.trancheStrategy = this.TrancheStrategy.new([100, 100], [80000, 80000], [40000, 40000]);
+    await preIcoStrategy.setEndDate(crowdsaleParams.end_time);
+    await trancheStrategy.setEndDate(crowdsaleParams.end_time);
 
+    const earlyContribStrategy = await EarlyContribStrategy.new(
+        setupParams.early_contributors.bonus, setupParams.early_contributors.amount,
+        setupParams.early_contributors.rate
+    );
 
-let f = async () => {
-    module.exports.multiSigMowjow = await this.MultiSigMowjow.deployed();
-    module.exports.mowjowFunds = await this.MowjowFunds.deployed();
-    module.exports.earlyContribStrategy = await this.EarlyContribStrategy.deployed();
-    module.exports.finalizableMowjow = await this.FinalizableMowjow.deployed();
+    const mowjowCrowdsale = await MowjowCrowdsale.new(
+        crowdsaleParams.start_time, crowdsaleParams.end_time,
+        crowdsaleParams.rate, wallet, crowdsaleParams.cap,
+        earlyContribStrategy.address, preIcoStrategy.address,
+        trancheStrategy.address, finalizableMowjow.address
+    );
+
+    const mowjowCrowdsaleAddress = mowjowCrowdsale.address;
+    await preIcoStrategy.setCrowdsaleAddress(mowjowCrowdsaleAddress);
+    await trancheStrategy.setCrowdsaleAddress(mowjowCrowdsaleAddress);
+    await earlyContribStrategy.setCrowdsaleAddress(mowjowCrowdsaleAddress);
+    await finalizableMowjow.setCrowdsaleAddress(mowjowCrowdsaleAddress);
+
+    const actionOwners = [finalizableMowjow.address, _];
+    await mowjowFunds.setActionOwners(actionOwners, {from: _});
+
+    const tokenInstance = await mowjowCrowdsale.token();
+    const token = await MowjowToken.at(tokenInstance);
+
+    return [mowjowCrowdsale, finalizableMowjow, token];
 };
-
-f();

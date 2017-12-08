@@ -8,6 +8,7 @@ contract MowjowToken is MintableToken {
     string public name;
     string public symbol;
     uint public decimals;
+    uint256 public initialSupply;
     bool hasFinalized;
 
     /*
@@ -18,12 +19,12 @@ contract MowjowToken is MintableToken {
         _;
     }
 
-    function MowjowToken(string _name, string _symbol, uint _decimals, uint _initialSupply) public { // initial supply from params
+    function MowjowToken(string _name, string _symbol, uint _decimals, uint256 _initialSupply) public { // initial supply from params
         name = _name;
         symbol = _symbol;
         decimals = _decimals;
-        totalSupply = _initialSupply;
         hasFinalized = false;
+        initialSupply = _initialSupply;
     }
 
     /*
