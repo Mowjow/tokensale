@@ -65,3 +65,28 @@ exports.setupCrowdsaleSuite = async function(setupParams, crowdsaleParams, _, wa
 
     return [mowjowCrowdsale, finalizableMowjow, token];
 };
+
+const startTime = this.latestTime() + this.duration.weeks(1),
+    endTime = startTime + this.duration.weeks(8),
+    afterEndTime = endTime + this.duration.weeks(8),
+    rate = 40000;
+
+exports.etherValue = new this.ether(0.0000000000000001);
+exports.expectedTokenAmount = new this.BigNumber(rate).mul(this.etherValue).mul(2);
+exports.expectedTokenAmountPreIco = new this.BigNumber(rate).mul(2);
+
+exports.crowdsaleParams = {
+    rate: 1,
+    cap: this.ether(1),
+    start_time: startTime,
+    end_time: endTime,
+    after_end_time: afterEndTime
+};
+
+exports.crowdsaleParamsEnding = {
+    rate: 1,
+    cap: this.ether(3),
+    start_time: startTime,
+    end_time: endTime,
+    after_end_time: afterEndTime
+};

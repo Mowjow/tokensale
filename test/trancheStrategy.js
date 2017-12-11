@@ -12,8 +12,8 @@ contract('TrancheStrategy', function ([_, investor, crowdsaleAddress]) {
 
     before(async function () {
         await t.advanceBlock();
-
-        this.trancheStrategy = await t.TrancheStrategy.new(
+        TrancheStrategy = artifacts.require('TrancheStrategy');
+        this.trancheStrategy = await TrancheStrategy.new(
             TRANCHE_BONUSES, TRANCHE_VALUES,
             TRANCHE_RATES, {from: crowdsaleAddress});
 

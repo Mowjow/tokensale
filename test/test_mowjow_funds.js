@@ -1,14 +1,8 @@
 const helper = require('./helper');
+const { ADDED_BALANCE_EVENT, SENT_FROM_FUND_EVENT, tokenParams } = require('./helpers/config.json');
 const MowjowToken = artifacts.require('./MowjowToken.sol');
 const MowjowFunds = artifacts.require('./MowjowFunds.sol');
 const should = helper.should;
-
-const tokenParams = {
-    name: 'SomeToken',
-    symbol: 'Symb',
-    decimals: 18,
-    initial_supply: 1
-};
 
 contract('MowjowFunds', function ([_, investor]) {
 
@@ -23,7 +17,7 @@ contract('MowjowFunds', function ([_, investor]) {
 
         it('should add amount to fund', async function () {
             const {logs} = await this.mowjowFunds.fund(0, 100, {from: _});
-            const event = logs.find(e => e.event === 'AddedBalanceToFund');
+            const event = logs.find(e => e.event === ADDED_BALANCE_EVENT);
             should.exist(event);
             event.args.numberFund.should.be.bignumber.equal(0);
             event.args.addedTokens.should.be.bignumber.equal(100);
@@ -34,7 +28,7 @@ contract('MowjowFunds', function ([_, investor]) {
             await this.token.mint(this.mowjowFunds.address, 10000000, {from: _});
             await this.token.changeStatusFinalized({from: _});
             const instance = await this.mowjowFunds.transferToFund(investor, 0, 50, this.token.address, {from: _});
-            const newEvent = instance.logs.find(e => e.event === 'SentFromFund');
+            const newEvent = instance.logs.find(e => e.event === SENT_FROM_FUND_EVENT);
             should.exist(newEvent);
             newEvent.args.numberFund.should.be.bignumber.equal(0);
             newEvent.args.destination.should.be.bignumber.equal(investor);
