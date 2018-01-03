@@ -11,8 +11,7 @@
     "test": "truffle test",
     "test-net": "testrpc --network development -l 990000000000000 -u 0 -u 1 -u 2 -u 3",
     "ropsten": "testrpc --network ropsten -l 990000000000000 -u 0 -u 1 -u 2 -u 3 --gas 5555555555",
-    "remix": "remixd -S /home/developer/Documents/projects/mowjow/contracts",
-    "abi-param": "node  ./test/abi-encoded/abi.js",
+    "remix": "remixd -S /home/developer/Documents/Bounty/tokensale/contracts",
     "mr": "truffle migrate --reset --network ropsten"
   },
   "dependencies": {

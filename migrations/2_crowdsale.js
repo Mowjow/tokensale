@@ -3,7 +3,7 @@ const PreIcoStrategy = artifacts.require("./PreIcoStrategy.sol");
 const TrancheStrategy = artifacts.require("./TrancheStrategy.sol");
 const FinalizableMowjow = artifacts.require("./FinalizableMowjow.sol");
 const MowjowCrowdsale = artifacts.require('MowjowCrowdsale.sol');
-
+const MowjowBounty = artifacts.require('MowjowBounty.sol');
 
 module.exports = async function (deployer, network, accounts) {
 

@@ -67,8 +67,6 @@ contract  TrancheStrategy is PricingStrategy {
 
         uint256 etherInWei = 1e18;
 
-        require(_value >= etherInWei.div(currentTranche.rate));
-
         uint256 bonusRate = currentTranche.bonus;
         uint256 tokens = _value.div(1e18).mul(currentTranche.rate);
         uint256 bonusToken = tokens.mul(bonusRate).div(100);
@@ -127,5 +125,4 @@ contract  TrancheStrategy is PricingStrategy {
         }
         return MAX_TRANCHES + 1;
     }
-
 }

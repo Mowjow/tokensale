@@ -7,11 +7,8 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 *  Contract for manage methods from Mowjow crowdsale only.
 */
 contract CrowdsaleHelper is Ownable {
-    /*
-    * @dev
-    */
-    address crowdsale;
 
+    address crowdsale;
 
     modifier onlyCrowdsale {
         require(crowdsale == msg.sender);

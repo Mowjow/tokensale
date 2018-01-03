@@ -2,13 +2,13 @@ pragma solidity ^0.4.11;
 
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./PricingStrategy.sol";
+import {Bounty, Target} from "zeppelin-solidity/contracts/Bounty.sol";
 
-
-contract  PreIcoStrategy is PricingStrategy {
+contract  PreIcoStrategy is PricingStrategy, Target {
     using SafeMath for uint256;
 
     uint256 public rate;
-    uint256 bonus;
+    uint256 public bonus;
     uint256 public maxCap;
 
     //events for testing
@@ -70,5 +70,25 @@ contract  PreIcoStrategy is PricingStrategy {
     */ 
     function soldInTranche(uint256 tokens) internal {
         totalSoldTokens = totalSoldTokens.add(tokens);
+    }
+
+    bool public compromised = false; // In testing, true means the contract was breached
+
+    /* Now we have the Bounty code, as the contract is Bounty.
+    * @dev Function to check if the contract has been compromised.
+    */
+    function checkInvariant() public returns(bool) {
+        // Check the compromised flag.
+        if (compromised == true) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+    * @dev Toggle the compromised flag. For testing the bounty program
+    */
+    function compromiseContract() public {
+        compromised = true;
     }
 }
