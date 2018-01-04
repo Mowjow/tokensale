@@ -44,12 +44,12 @@ exports.setupCrowdsaleSuite = async function(setupParams, crowdsaleParams, _, wa
         setupParams.early_contributors.rate
     );
 
-    const mowjowCrowdsale = await MowjowCrowdsale.new(
+    const mowjowCrowdsale = await MowjowCrowdsale.new (
         crowdsaleParams.start_time, crowdsaleParams.end_time,
         crowdsaleParams.rate, wallet, crowdsaleParams.cap,
         earlyContribStrategy.address, preIcoStrategy.address,
         trancheStrategy.address, finalizableMowjow.address
-    );
+        , {from: _, gas: 47000000});
 
     const mowjowCrowdsaleAddress = mowjowCrowdsale.address;
     await preIcoStrategy.setCrowdsaleAddress(mowjowCrowdsaleAddress);
@@ -73,7 +73,7 @@ const startTime = this.latestTime() + this.duration.weeks(1),
 
 exports.etherValue = new this.ether(0.0000000000000001);
 exports.expectedTokenAmount = new this.BigNumber(rate).mul(this.etherValue).mul(2);
-exports.expectedTokenAmountPreIco = new this.BigNumber(rate).mul(2);
+exports.expectedTokenAmountPreIco = new this.BigNumber(rate).mul(this.ether(1)).mul(2);
 
 exports.crowdsaleParams = {
     rate: 1,

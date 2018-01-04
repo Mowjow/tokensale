@@ -8,7 +8,7 @@ contract('TrancheStrategy', function ([_, investor, crowdsaleAddress]) {
     // uint256[] _bonuses, uint[] _valueForTranches, uint[] _rates
     const TRANCHE_BONUSES = [100, 100];
     const TRANCHE_RATES = [40000, 40000];
-    const TRANCHE_VALUES = [80000, 80000];
+    const TRANCHE_VALUES = [80000e18, 80000e18];
 
     before(async function () {
         await t.advanceBlock();
@@ -19,12 +19,10 @@ contract('TrancheStrategy', function ([_, investor, crowdsaleAddress]) {
 
         await this.trancheStrategy.setCrowdsaleAddress(crowdsaleAddress, {from: crowdsaleAddress});
 
-        let a = 5;
-
     });
 
     describe('payments in pre ico for whitelist investors', function () {
-        
+
         it('Should not have empty tranches', async function () {
             const hasEmpty = await this.trancheStrategy.isNoEmptyTranches();
             assert.equal(hasEmpty, false);
@@ -35,7 +33,7 @@ contract('TrancheStrategy', function ([_, investor, crowdsaleAddress]) {
             const {logs} = await this.trancheStrategy.countTokens(etherAmount, {from: crowdsaleAddress});
             const event = logs.find(e => e.event === 'TokenForInvestor');
             should.exist(event);
-            event.args._tokenAndBonus.should.be.bignumber.equal(80000);
+            event.args._tokenAndBonus.should.be.bignumber.equal(80000e18);
         });
     })
 
