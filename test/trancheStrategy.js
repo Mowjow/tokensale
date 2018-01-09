@@ -3,9 +3,6 @@ const should = t.should;
 const config = require('../migrations/config.json');
 
 contract('TrancheStrategy', function ([_, investor, crowdsaleAddress]) {
-
-
-    // uint256[] _bonuses, uint[] _valueForTranches, uint[] _rates
     const TRANCHE_BONUSES = [100, 100];
     const TRANCHE_RATES = [40000, 40000];
     const TRANCHE_VALUES = [80000e18, 80000e18];

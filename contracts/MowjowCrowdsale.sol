@@ -3,7 +3,7 @@ pragma solidity ^0.4.11;
 import "zeppelin-solidity/contracts/token/MintableToken.sol";
 import "zeppelin-solidity/contracts/crowdsale/FinalizableCrowdsale.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol"; 
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./MowjowToken.sol";
 import "./TrancheStrategy.sol";
 import "./FinalizableMowjow.sol";
@@ -17,16 +17,17 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
     uint256 public cap;
 
-    MowjowToken mowjowToken;    
+    MowjowToken mowjowToken;
     FinalizableMowjow public finalizableMowjow;
     TrancheStrategy public trancheStrategy;
     EarlyContribStrategy public earlyContribStrategy;
     PreIcoStrategy public preIcoStrategy;
 
     address[] public earlyContributors;
-    address[] public whitelistInvestors; 
+    address[] public whitelistInvestors;
+    address[] public mowjowInvestors;
 
-    /** State machine    
+    /** State machine
     * - PreFunding: We have not passed start time yet
     * - Funding: Active crowdsale
     * - Finalized: The finalized has been called and successfully executed
@@ -54,7 +55,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap,
         EarlyContribStrategy _earlyContribStrategy, PreIcoStrategy _preIcoStrategy,
         TrancheStrategy _trancheStrategy, FinalizableMowjow _finalizableMowjow
-        ) Crowdsale(_startTime, _endTime, 1, _wallet) public {
+    ) Crowdsale(_startTime, _endTime, 1, _wallet) public {
 
         require(_cap > 0);
 
@@ -89,14 +90,17 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
         State currentState = getState();
         PricingStrategy strategy;
-
+        bool isValid;
         if(currentState == State.PreFunding) {
-            bool isValid = isInList(_beneficiary, whitelistInvestors);
+            isValid = isInList(_beneficiary, whitelistInvestors);
             require(isValid);
             strategy = preIcoStrategy;
         } else if(currentState == State.Funding) {
+            isValid = isInList(_beneficiary, mowjowInvestors);
+            require(isValid);
             strategy = trancheStrategy;
         }
+
         uint256 tokensAmount = strategy.countTokens(msg.value);
         mowjowToken.mint(_beneficiary, tokensAmount);
         weiRaised = weiRaised.add(msg.value);
@@ -161,6 +165,15 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     }
 
     /*
+    *  @dev Add mowjow investor to list
+    *  @param investor address Whitelist investor's address
+    */
+    function addMowjowInvestors(address _investor) public onlyOwner {
+        require(isNewInvestor(_investor, mowjowInvestors));
+        mowjowInvestors.push(_investor);
+    }
+
+    /*
     *  @dev Check address of investor in whitelist
     *  @return boolean Return true if the investor is new for the whitelist
     */
@@ -181,8 +194,6 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     * @return boolean Return true if current investor's address is in to list
     */
     function isInList(address _investor, address[] _list) internal constant returns (bool) {
-        State state = getState();
-        require(state == State.PreFunding);
         require(_investor != 0);
 
         bool hasInvestor = false;
@@ -194,17 +205,17 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
         return hasInvestor;
     }
-    
+
     /*
     * @dev Check the sale period is still and investor's amount no zero
-    * @return boolean Return true if this payment is avalable
+    * @return boolean Return true if this payment is available
     */
-    function validPurchase() internal constant returns (bool) { 
+    function validPurchase() internal constant returns (bool) {
         require(msg.value > 0);
 
         bool ended = hasEnded();
         return !ended;
-    }    
+    }
 
     /*
     * @dev Creates the token to be sold.
@@ -212,7 +223,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     */
     function createTokenContract() internal returns (MintableToken) {
         mowjowToken = new MowjowToken('MowjowToken', 'MJT', 18, 75 * 1e8);
-
+        mowjowToken.setOwnerPauseStatement(owner);
         return mowjowToken;
     }
 
@@ -224,14 +235,14 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     }
 
     /*
-    * @dev The overriding function from zeppelin-solidity/contracts/crowdsale/FinalizableCrowdsale.sol 
+    * @dev The overriding function from zeppelin-solidity/contracts/crowdsale/FinalizableCrowdsale.sol
     * should call super.finalization() to ensure the chain of finalization is executed entirely.
     * Calculate and send tokens to funds from whitelist paper
     */
-
     function finalization() internal {
         mowjowToken.changeStatusFinalized();
         uint256 totalTokens =  mowjowToken.initialSupply();
+        totalTokens = totalTokens.mul(1e18);
 
         uint256 earlyContributorsTokens =  earlyContribStrategy.totalSoldTokens();
         uint256 preIcoTokens =  preIcoStrategy.totalSoldTokens();
@@ -251,7 +262,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         token.mint(msg.sender, sumOfTokens);
 
         require(finalizableMowjow.doFinalization(longTermReserve,
-            rewardsEngineTokens, teamBonuses));
+        rewardsEngineTokens, teamBonuses));
     }
-     
+
 }

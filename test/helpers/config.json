@@ -1,24 +1,24 @@
 {
   "setupParams" : {
-      "pre_ico": {
-        "bonus": 100,
-        "amount": 80000,
-        "rate": 40000
-      },
-      "tranche_strategy": {
-        "bonus": [100, 100],
-        "amount": [80000, 80000],
-        "rate": [40000, 40000]
-      },
-      "early_contributors": {
-        "bonus": 100,
-        "amount": 480000000,
-        "rate": 40000
-      },
-      "crowdsale": {
-        "rate": 1,
-        "cap": 2
-      }
+    "pre_ico": {
+      "bonus": 100,
+      "amount": 80000e18 ,
+      "rate": 40000
+    },
+    "tranche_strategy": {
+      "bonus": [100, 100],
+      "amount": [80000e18 , 80000e18 ],
+      "rate": [40000, 40000]
+    },
+    "early_contributors": {
+      "bonus": 100,
+      "amount": 80000e18 ,
+      "rate": 40000
+    },
+    "crowdsale": {
+      "rate": 1,
+      "cap": 2
+    }
   },
   "PURCHASE_EVENT": "Purchase",
   "ADDED_BALANCE_EVENT": "AddedBalanceToFund",

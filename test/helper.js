@@ -71,7 +71,7 @@ const startTime = this.latestTime() + this.duration.weeks(1),
     afterEndTime = endTime + this.duration.weeks(8),
     rate = 40000;
 
-exports.etherValue = new this.ether(0.0000000000000001);
+exports.etherValue = new this.ether(0.000000000001);
 exports.expectedTokenAmount = new this.BigNumber(rate).mul(this.etherValue).mul(2);
 exports.expectedTokenAmountPreIco = new this.BigNumber(rate).mul(this.ether(1)).mul(2);
 

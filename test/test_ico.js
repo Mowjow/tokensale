@@ -11,12 +11,13 @@ contract('MowjowCrowdsaleIco', function ([_, investor, wallet, purchaser]) {
 
     beforeEach(async function () {
 
-        const [crowdsale, finalize, token] = await helper.setupCrowdsaleSuite(
+        const [crowdsale, preIcoStrategy, finalize, token] = await helper.setupCrowdsaleSuite(
             setupParams, helper.crowdsaleParams, _, wallet
         );
         this.mowjowCrowdsale = crowdsale;
         this.token = token;
         this.finalizableMowjow = finalize;
+        this.preIcoStrategy = preIcoStrategy;
     });
 
     describe('payments in pre ico with 100% bonuses', function () {
@@ -31,15 +32,53 @@ contract('MowjowCrowdsaleIco', function ([_, investor, wallet, purchaser]) {
         });
 
         it('should 100% bonus in second tranche', async function () {
-            const expectedValue = 80000;
+            const expectedValue = 80000e18;
             await this.mowjowCrowdsale.addWhitelistInvestors(purchaser, {from: _});
-            const logs   = await this.mowjowCrowdsale.buyTokens(purchaser, {
+            const {logs}   = await this.mowjowCrowdsale.buyTokens(purchaser, {
                 value: helper.ether(1), from: purchaser
             });
-            await this.mowjowCrowdsale.buyTokens(purchaser, { value: helper.ether(1), from: purchaser });
-            const event = logs.logs.find(e => e.event === PURCHASE_EVENT);
+            const event = logs.find(e => e.event === PURCHASE_EVENT);
             should.exist(event);
             event.args.amount.should.be.bignumber.equal(expectedValue);
-        })
+            await this.mowjowCrowdsale.addMowjowInvestors(investor, {from: _});
+            const log  = await this.mowjowCrowdsale.buyTokens(investor, { value: helper.ether(1), from: purchaser });
+            const event1 = log.logs.find(e => e.event === PURCHASE_EVENT);
+            should.exist(event1);
+            event1.args.amount.should.be.bignumber.equal(expectedValue);
+        });
+
+        it('should reject not list pre ico investor', async function () {
+            await this.mowjowCrowdsale.buyTokens(investor, {value: helper.ether(1), from: purchaser})
+            .should.be.rejectedWith(helper.EVMRevert);
+        });
+
+        it('should reject not added ico investor', async function () {
+            const expectedValue = 80000e18;
+            await this.mowjowCrowdsale.addWhitelistInvestors(purchaser, {from: _});
+            const {logs}   = await this.mowjowCrowdsale.buyTokens(purchaser, {
+                value: helper.ether(1), from: purchaser
+            });
+            const event = logs.find(e => e.event === PURCHASE_EVENT);
+            should.exist(event);
+            event.args.amount.should.be.bignumber.equal(expectedValue);
+            await this.mowjowCrowdsale.buyTokens(purchaser, { value: helper.ether(1), from: purchaser })
+                .should.be.rejectedWith(helper.EVMRevert);
+
+        });
+
+        it('should reject if investor is exists in list investors', async function () {
+            const expectedValue = 80000e18;
+            await this.mowjowCrowdsale.addWhitelistInvestors(purchaser, {from: _});
+            const {logs}   = await this.mowjowCrowdsale.buyTokens(purchaser, {
+                value: helper.ether(1), from: purchaser
+            });
+            const event = logs.find(e => e.event === PURCHASE_EVENT);
+            should.exist(event);
+            await this.mowjowCrowdsale.addMowjowInvestors(investor, {from: _});
+            await this.mowjowCrowdsale.addMowjowInvestors(investor, {from: _})
+                .should.be.rejectedWith(helper.EVMRevert);
+
+        });
+
     })
 });

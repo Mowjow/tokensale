@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11; 
+pragma solidity ^0.4.11;
 
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./PricingStrategy.sol";
@@ -10,7 +10,7 @@ import "./PricingStrategy.sol";
 */
 contract  EarlyContribStrategy is PricingStrategy {
     using SafeMath for uint256;
- 
+
     uint256 public rate;
     uint256 bonus;
     uint256 maxCap;
@@ -29,15 +29,17 @@ contract  EarlyContribStrategy is PricingStrategy {
     * @dev Count number of tokens with bonuses
     * @return uint256 Return number of tokens for an investor
     */
-    function countTokens(uint256 _value) public onlyCrowdsale returns (uint256) {
-
-        uint256 tokens = _value.mul(rate);
+    function countTokens(uint256 _value) public onlyCrowdsale returns (uint256 tokensAndBonus) {
+        uint256 etherInWei = 1e18;
+        uint256 val = _value.mul(etherInWei);
+        uint256 oneTokenInWei = etherInWei.div(rate);
+        uint256 tokens = val.div(oneTokenInWei);
         uint256 bonusToken = tokens.mul(bonus).div(100);
 
-        uint256 totalTokens = tokens.add(bonusToken);
-        getFreeTokensInTranche(totalTokens);
-        soldInTranche(totalTokens);
-        return totalTokens;
+        tokensAndBonus = tokens.add(bonusToken);
+        getFreeTokensInTranche(tokensAndBonus);
+        soldInTranche(tokensAndBonus);
+        return tokensAndBonus;
     }
 
     /*

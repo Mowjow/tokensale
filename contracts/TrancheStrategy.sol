@@ -16,13 +16,13 @@ contract  TrancheStrategy is PricingStrategy {
     */
     struct BonusSchedule {
 
-        //rate of bonus for current of tranche
-        uint256 bonus;
+    //rate of bonus for current of tranche
+    uint256 bonus;
 
-        //Value of tokens available the current period
-        uint valueForTranche;
+    //Value of tokens available the current period
+    uint valueForTranche;
 
-        uint rate;
+    uint rate;
     }
 
     //event for testing
@@ -31,7 +31,7 @@ contract  TrancheStrategy is PricingStrategy {
     uint MAX_TRANCHES = 50;
 
     //Store BonusStrategy in a fixed array, so that it can be seen in a blockchain explorer
-    BonusSchedule[] public tranches; 
+    BonusSchedule[] public tranches;
 
     /*
     * @dev Constructor
@@ -46,9 +46,9 @@ contract  TrancheStrategy is PricingStrategy {
 
         for (uint i = 0; i < _bonuses.length; i++) {
             tranches.push(BonusSchedule({
-                bonus: _bonuses[i],
-                valueForTranche: _valueForTranches[i],
-                rate: _rates[i]
+            bonus: _bonuses[i],
+            valueForTranche: _valueForTranches[i].mul(1e18),
+            rate: _rates[i]
             }));
         }
     }
@@ -59,6 +59,7 @@ contract  TrancheStrategy is PricingStrategy {
     * @return uint256 Return number of tokens for an investor
     */
     function countTokens(uint256 _value) public onlyCrowdsale returns (uint256 tokensAndBonus) {
+
         uint indexOfTranche = defineTranchePeriod();
 
         require(indexOfTranche != MAX_TRANCHES + 1);
@@ -68,20 +69,25 @@ contract  TrancheStrategy is PricingStrategy {
         uint256 etherInWei = 1e18;
 
         uint256 bonusRate = currentTranche.bonus;
-        uint256 tokens = _value.div(1e18).mul(currentTranche.rate);
+        // uint256 tokens = _value.div(1e18).mul(currentTranche.rate);
+        uint256 val = _value.mul(etherInWei);
+        uint256 oneTokenInWei = etherInWei.div(currentTranche.rate);
+        uint256 tokens = val.div(oneTokenInWei);
         uint256 bonusToken = tokens.mul(bonusRate).div(100);
 
         tokensAndBonus = tokens.add(bonusToken);
         soldInTranche(tokensAndBonus);
         TokenForInvestor(tokens, tokensAndBonus, indexOfTranche, bonusRate);
         return tokensAndBonus;
+
+
     }
 
-     /*
-     * @dev Check required of tokens in the tranche
-     * @param _requiredTokens uint256 Number of tokens
-     * @return boolean Return true if count of tokens is available
-     */
+    /*
+    * @dev Check required of tokens in the tranche
+    * @param _requiredTokens uint256 Number of tokens
+    * @return boolean Return true if count of tokens is available
+    */
     function getFreeTokensInTranche(uint256 _requiredTokens) internal constant returns (bool) {
         bool hasTokens = false;
         uint256 indexOfTranche = defineTranchePeriod();
