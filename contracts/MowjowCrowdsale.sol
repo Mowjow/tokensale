@@ -222,7 +222,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     */
     function createTokenContract() internal returns (MintableToken) {
         mowjowToken = new MowjowToken('MowjowToken', 'MJT', 18, 75 * 1e8);
-        mowjowToken.setOwnerPauseStatement(owner);
+        mowjowToken.setOwnerPauseStatement(mgs.sender);
         return mowjowToken;
     }
 
