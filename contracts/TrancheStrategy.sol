@@ -16,21 +16,25 @@ contract  TrancheStrategy is PricingStrategy {
     */
     struct BonusSchedule {
 
-    //rate of bonus for current of tranche
-    uint256 bonus;
+        //rate of bonus for current of tranche
+        uint256 bonus;
 
-    //Value of tokens available the current period
-    uint valueForTranche;
+        //Value of tokens available the current period
+        uint256 valueForTranche;
 
-    uint rate;
+        uint256 rate;
     }
 
-    //event for testing
+    /*
+    * @dev event after counting tokens of a investor
+    */
     event TokenForInvestor(uint256 _token, uint256 _tokenAndBonus, uint256 indexOfperiod, uint256 bonusRate);
 
-    uint MAX_TRANCHES = 50;
+    uint256 MAX_TRANCHES = 50;
 
-    //Store BonusStrategy in a fixed array, so that it can be seen in a blockchain explorer
+    /*
+    * @dev Store BonusStrategy in a fixed array, so that it can be seen in a blockchain explorer
+    */
     BonusSchedule[] public tranches;
 
     /*
@@ -60,7 +64,7 @@ contract  TrancheStrategy is PricingStrategy {
     */
     function countTokens(uint256 _value) public onlyCrowdsale returns (uint256 tokensAndBonus) {
 
-        uint indexOfTranche = defineTranchePeriod();
+        uint256 indexOfTranche = defineTranchePeriod();
 
         require(indexOfTranche != MAX_TRANCHES + 1);
 
@@ -69,7 +73,6 @@ contract  TrancheStrategy is PricingStrategy {
         uint256 etherInWei = 1e18;
 
         uint256 bonusRate = currentTranche.bonus;
-        // uint256 tokens = _value.div(1e18).mul(currentTranche.rate);
         uint256 val = _value.mul(etherInWei);
         uint256 oneTokenInWei = etherInWei.div(currentTranche.rate);
         uint256 tokens = val.div(oneTokenInWei);
@@ -79,8 +82,6 @@ contract  TrancheStrategy is PricingStrategy {
         soldInTranche(tokensAndBonus);
         TokenForInvestor(tokens, tokensAndBonus, indexOfTranche, bonusRate);
         return tokensAndBonus;
-
-
     }
 
     /*

@@ -26,6 +26,15 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     address[] public earlyContributors;
     address[] public whitelistInvestors;
     address[] public mowjowInvestors;
+    address[] public mowjowManagers;
+
+    /*
+    *  modifier for valid accounts of managers and for the owner of the contract
+    */
+    modifier onlyManagers() {
+        require(!isNewAccount(msg.sender, mowjowManagers) || msg.sender == owner);
+        _;
+    }
 
     /** State machine
     * - PreFunding: We have not passed start time yet
@@ -81,10 +90,9 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
     /*
     * @dev This method has been overridden from crowdsale
-    * buying tokens for any prise strategy
+    * buying tokens for any price strategy
     */
     function buyTokens(address _beneficiary) public payable {
-
         require(_beneficiary != 0x0);
         require(msg.value > 0);
 
@@ -92,11 +100,11 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         PricingStrategy strategy;
         bool isValid;
         if(currentState == State.PreFunding) {
-            isValid = isInList(_beneficiary, whitelistInvestors);
+            isValid = !isNewAccount(_beneficiary, whitelistInvestors);
             require(isValid);
             strategy = preIcoStrategy;
         } else if(currentState == State.Funding) {
-            isValid = isInList(_beneficiary, mowjowInvestors);
+            isValid = !isNewAccount(_beneficiary, mowjowInvestors);
             require(isValid);
             strategy = trancheStrategy;
         }
@@ -138,13 +146,13 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
     /*
     *  @dev Add Early contributor to list and to mint tokens for him (only in the presale time)
-    *  @param investor address Early contributor's address
-    *  @param payments uint256 Early contributor's payments in ether
+    *  @param _investor address Early contributor's address
+    *  @param _payments uint256 Early contributor's payments in ether
     */
-    function addEarlyContributors(address _investor, uint256 _payments) public onlyOwner {
+    function addEarlyContributors(address _investor, uint256 _payments) public onlyManagers {
         State currentState = getState();
 
-        require(isNewInvestor(_investor, earlyContributors));
+        require(isNewAccount(_investor, earlyContributors));
         require(currentState == State.PreFunding);
 
         uint256 tokensAmount = earlyContribStrategy.countTokens(_payments);
@@ -156,54 +164,45 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
     /*
     *  @dev Add Whitelist investor to list
-    *  @param investor address Whitelist investor's address
+    *  @param _investor address Whitelist investor  address
     */
-    function addWhitelistInvestors(address _investor) public onlyOwner {
-        require(isNewInvestor(_investor, whitelistInvestors));
+    function addWhitelistInvestors(address _investor) public onlyManagers {
+        require(isNewAccount(_investor, whitelistInvestors));
         require((getState() == State.PreFunding));
         whitelistInvestors.push(_investor);
     }
 
     /*
     *  @dev Add mowjow investor to list
-    *  @param investor address Whitelist investor's address
+    *  @param _investor address mowjow investor  address
     */
-    function addMowjowInvestors(address _investor) public onlyOwner {
-        require(isNewInvestor(_investor, mowjowInvestors));
+    function addMowjowInvestors(address _investor) public onlyManagers {
+        require(isNewAccount(_investor, mowjowInvestors));
         mowjowInvestors.push(_investor);
     }
 
     /*
-    *  @dev Check address of investor in whitelist
-    *  @return boolean Return true if the investor is new for the whitelist
+    *  @dev Add mowjow administrator to list
+    *  @param _manager address mowjow manager address
     */
-    function isNewInvestor(address _investor, address[] _list) internal constant returns (bool) {
-        bool newInvestor = true;
-        for (uint256 i = 0; i < _list.length; i++) {
-            if(_list[i] == _investor) {
-                newInvestor = false;
-            }
-        }
-        return newInvestor;
+    function addManager(address _manager) public onlyOwner {
+        require(isNewAccount(_manager, mowjowManagers));
+        mowjowManagers.push(_manager);
     }
 
     /*
-    * @dev Check if address is in early contributors
-    * @param investor address Early contributors's address
-    * @param list address[] Early contributors's addresses
-    * @return boolean Return true if current investor's address is in to list
+    *  @dev Check address in list
+    *  @return boolean Return true if the account is new for the list
     */
-    function isInList(address _investor, address[] _list) internal constant returns (bool) {
-        require(_investor != 0);
-
-        bool hasInvestor = false;
+    function isNewAccount(address _account, address[] _list) internal constant returns (bool) {
+        require(_account != 0);
+        bool newAccount = true;
         for (uint256 i = 0; i < _list.length; i++) {
-            if (_list[i] == _investor) {
-                hasInvestor = true;
+            if(_list[i] == _account) {
+                newAccount = false;
             }
         }
-
-        return hasInvestor;
+        return newAccount;
     }
 
     /*
@@ -259,10 +258,10 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         longTermReserve = longTermReserve.sub(rewardsEngineTokens);
 
         uint256 sumOfTokens = longTermReserve.add(teamBonuses).add(rewardsEngineTokens);
+
         token.mint(msg.sender, sumOfTokens);
 
         require(finalizableMowjow.doFinalization(longTermReserve,
         rewardsEngineTokens, teamBonuses));
     }
-
 }

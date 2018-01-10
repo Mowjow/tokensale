@@ -11,13 +11,12 @@ contract('MowjowCrowdsaleIco', function ([_, investor, wallet, purchaser]) {
 
     beforeEach(async function () {
 
-        const [crowdsale, preIcoStrategy, finalize, token] = await helper.setupCrowdsaleSuite(
+        const [crowdsale, finalize, token] = await helper.setupCrowdsaleSuite(
             setupParams, helper.crowdsaleParams, _, wallet
         );
         this.mowjowCrowdsale = crowdsale;
         this.token = token;
         this.finalizableMowjow = finalize;
-        this.preIcoStrategy = preIcoStrategy;
     });
 
     describe('payments in pre ico with 100% bonuses', function () {

@@ -62,7 +62,8 @@ contract('MowjowToken', function ([_, investor, wallet, purchaser, ownerPauseSta
         const result = await this.token.mint(investor, 100);
 
         await this.token.halt({from: this.ownerPause});
-        await expectThrow(this.token.transfer(investor, 100, {from: investor})).should.be.rejectedWith(helper.EVMRevert);
+        await expectThrow(this.token.transfer(investor, 100, {from: investor}))
+            .should.be.rejectedWith(helper.EVMRevert);
     });
 
     it('should fail to transferFrom after set halt statement', async function () {
@@ -70,14 +71,16 @@ contract('MowjowToken', function ([_, investor, wallet, purchaser, ownerPauseSta
         await this.token.halt({from: this.ownerPause});
         let balanceInvestor = await this.token.balanceOf(investor);
         balanceInvestor.should.be.bignumber.equal(100);
-        await expectThrow(this.token.transferFrom(investor, purchaser, 100, {from: investor})).should.be.rejectedWith(helper.EVMRevert);
+        await expectThrow(this.token.transferFrom(investor, purchaser, 100, {from: investor}))
+            .should.be.rejectedWith(helper.EVMRevert);
     });
 
     it('should not to transfer after set halt statement and can transfer after unhalt statement', async function () {
         await this.token.mint(investor, 10);
         await this.token.changeStatusFinalized({from: _});
         await this.token.halt({from: this.ownerPause});
-        await expectThrow(this.token.transfer(investor, 10, {from: investor})).should.be.rejectedWith(helper.EVMRevert);
+        await expectThrow(this.token.transfer(investor, 10, {from: investor}))
+            .should.be.rejectedWith(helper.EVMRevert);
         await this.token.unhalt({from: this.ownerPause});
         let statePaused = await this.token.halted();
         assert.equal(statePaused, false);

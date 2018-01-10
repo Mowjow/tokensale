@@ -19,7 +19,7 @@ contract  EarlyContribStrategy is PricingStrategy {
     * @dev Constructor
     * MAX CAP IN TOKENS ETC
     */
-    function EarlyContribStrategy(uint256 _bonus, uint _maxCap, uint _rate) public {
+    function EarlyContribStrategy(uint256 _bonus, uint256 _maxCap, uint256 _rate) public {
         bonus = _bonus;
         maxCap = _maxCap;
         rate = _rate;

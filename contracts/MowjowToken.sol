@@ -49,6 +49,9 @@ contract MowjowToken is MintableToken, Haltable {
         hasFinalized = true;
     }
 
+    /*
+    * @dev set administrator for manage pause statement
+    */
     function setOwnerPauseStatement(address _ownerPauseStatement) public onlyOwner {
         ownerPauseStatement = _ownerPauseStatement;
     }
