@@ -63,6 +63,7 @@ contract('MowjowCrowdsale', function ([_, investor, mowjowInvestor, wallet, purc
             await this.mowjowCrowdsale.buyTokens(purchaser, { value: helper.ether(1), from: purchaser })
                 .should.be.rejectedWith(helper.EVMRevert);
             await this.mowjowCrowdsale.addManager(manager1, {from: _});
+
             const expectedValue = 80000e18;
             await this.mowjowCrowdsale.addWhitelistInvestors(purchaser, {from: manager1});
             const {logs}   = await this.mowjowCrowdsale.buyTokens(purchaser, {
@@ -74,7 +75,7 @@ contract('MowjowCrowdsale', function ([_, investor, mowjowInvestor, wallet, purc
             await this.mowjowCrowdsale.buyTokens(investor, { value: helper.ether(1), from: purchaser })
                 .should.be.rejectedWith(helper.EVMRevert);
 
-            await this.mowjowCrowdsale.addMowjowInvestors(investor, {from: manager1});
+            await this.mowjowCrowdsale.addMowjowInvestors(investor, true, {from: manager1});
             const log  = await this.mowjowCrowdsale.buyTokens(investor, { value: helper.ether(1), from: purchaser });
             const event1 = log.logs.find(e => e.event === PURCHASE_EVENT);
             should.exist(event1);

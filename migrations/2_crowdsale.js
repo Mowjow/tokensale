@@ -4,6 +4,7 @@ const TrancheStrategy = artifacts.require("./TrancheStrategy.sol");
 const FinalizableMowjow = artifacts.require("./FinalizableMowjow.sol");
 const MowjowCrowdsale = artifacts.require('MowjowCrowdsale.sol');
 const MowjowBounty = artifacts.require('MowjowBounty.sol');
+const config = require('./config');
 
 module.exports = async function (deployer, network, accounts) {
 
@@ -12,8 +13,9 @@ module.exports = async function (deployer, network, accounts) {
 
     await deployer.deploy(MowjowCrowdsale, startDate, endDate, 15000, accounts[1], 15000,
             EarlyContribStrategy.address, PreIcoStrategy.address, TrancheStrategy.address,
-            FinalizableMowjow.address, {gas: 99999999, from: accounts[0]})
-    .then(async function () {
+            FinalizableMowjow.address, config.crowdsale.capPerUser, {gas: 99999999, from: accounts[0]})
+    .then(async function (address) {
+        console.log(address);
         const instance = await MowjowCrowdsale.deployed();
         const early = await EarlyContribStrategy.deployed();
         const tranche = await TrancheStrategy.deployed();

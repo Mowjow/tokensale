@@ -10,6 +10,6 @@ module.exports = function (deployer, network, accounts) {
             capTokens = 12 * 1e18
         ;
 
-    deployer.deploy(MowjowBounty, bonusesIco, valueForTranches,
-        rates, capInWei, capTokens, {gas: 99999999, from: accounts[0]});
+    // deployer.deploy(MowjowBounty, bonusesIco, valueForTranches,
+    //     rates, capInWei, capTokens, {gas: 99999999, from: accounts[0]});
 };

@@ -15,7 +15,14 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
     using SafeMath for uint256;
 
+    struct CrowdsaleInvestor {
+        address investorAddress;
+        uint256 weiAmount;
+        bool isVerified;
+    }
+
     uint256 public cap;
+    uint256 public crowdSaleCapPerUser; // cap for unverified users
 
     MowjowToken mowjowToken;
     FinalizableMowjow public finalizableMowjow;
@@ -25,7 +32,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
 
     address[] public earlyContributors;
     address[] public whitelistInvestors;
-    address[] public mowjowInvestors;
+    CrowdsaleInvestor[] public mowjowInvestors;
     address[] public mowjowManagers;
 
     /*
@@ -63,7 +70,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     function MowjowCrowdsale(
         uint256 _startTime, uint256 _endTime, uint256 _rate, address _wallet, uint256 _cap,
         EarlyContribStrategy _earlyContribStrategy, PreIcoStrategy _preIcoStrategy,
-        TrancheStrategy _trancheStrategy, FinalizableMowjow _finalizableMowjow
+        TrancheStrategy _trancheStrategy, FinalizableMowjow _finalizableMowjow, uint256 _crowdSaleCapPerUser
     ) Crowdsale(_startTime, _endTime, 1, _wallet) public {
 
         require(_cap > 0);
@@ -73,6 +80,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         preIcoStrategy = _preIcoStrategy;
         earlyContribStrategy = _earlyContribStrategy;
         cap = _cap;
+        crowdSaleCapPerUser = _crowdSaleCapPerUser;
     }
 
     function changeTrancheStrategy(TrancheStrategy _strategy) public onlyOwner {
@@ -88,6 +96,9 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     }
 
 
+    event ADDR(address addr);
+    event EXC(bool b);
+    event AMM(uint256 am);
     /*
     * @dev This method has been overridden from crowdsale
     * buying tokens for any price strategy
@@ -103,9 +114,15 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
             isValid = !isNewAccount(_beneficiary, whitelistInvestors);
             require(isValid);
             strategy = preIcoStrategy;
+
         } else if(currentState == State.Funding) {
-            isValid = !isNewAccount(_beneficiary, mowjowInvestors);
-            require(isValid);
+            CrowdsaleInvestor memory investor = getCrowdsaleAccount(_beneficiary);
+            require(investor.investorAddress != 0);
+
+            uint256 weiAmount = investor.weiAmount + msg.value;
+            bool isExceedCap = weiAmount > crowdSaleCapPerUser;
+            require(investor.isVerified && !isExceedCap);
+
             strategy = trancheStrategy;
         }
 
@@ -114,7 +131,6 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         weiRaised = weiRaised.add(msg.value);
         forwardFunds();
         Purchase(msg.sender, _beneficiary, msg.value, tokensAmount);
-
     }
 
     /**
@@ -176,9 +192,17 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     *  @dev Add mowjow investor to list
     *  @param _investor address mowjow investor  address
     */
-    function addMowjowInvestors(address _investor) public onlyManagers {
-        require(isNewAccount(_investor, mowjowInvestors));
-        mowjowInvestors.push(_investor);
+    function addMowjowInvestors(address _investor, bool _isVerified) public onlyManagers {
+        CrowdsaleInvestor memory investor = getCrowdsaleAccount(_investor);
+        require(investor.investorAddress == 0);
+
+        mowjowInvestors.push(CrowdsaleInvestor({
+            investorAddress: _investor,
+            isVerified: _isVerified,
+            weiAmount: 0
+        }));
+
+        investor = getCrowdsaleAccount(msg.sender);
     }
 
     /*
@@ -205,6 +229,16 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
         return newAccount;
     }
 
+    function getCrowdsaleAccount(address _account) internal constant returns (CrowdsaleInvestor) {
+        require(_account != 0);
+
+        for (uint256 i = 0; i < mowjowInvestors.length; i++) {
+            if(mowjowInvestors[i].investorAddress == _account) {
+                return mowjowInvestors[i];
+            }
+        }
+    }
+
     /*
     * @dev Check the sale period is still and investor's amount no zero
     * @return boolean Return true if this payment is available
@@ -222,7 +256,7 @@ contract MowjowCrowdsale is FinalizableCrowdsale {
     */
     function createTokenContract() internal returns (MintableToken) {
         mowjowToken = new MowjowToken('MowjowToken', 'MJT', 18, 75 * 1e8);
-        mowjowToken.setOwnerPauseStatement(mgs.sender);
+        mowjowToken.setOwnerPauseStatement(msg.sender);
         return mowjowToken;
     }
 

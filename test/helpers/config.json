@@ -2,7 +2,7 @@
   "setupParams" : {
     "pre_ico": {
       "bonus": 100,
-      "amount": 80000e18 ,
+      "amount": 80000e18,
       "rate": 40000
     },
     "tranche_strategy": {
@@ -12,7 +12,7 @@
     },
     "early_contributors": {
       "bonus": 100,
-      "amount": 80000e18 ,
+      "amount": 80000e18,
       "rate": 40000
     },
     "crowdsale": {

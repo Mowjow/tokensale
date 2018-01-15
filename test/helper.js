@@ -24,7 +24,7 @@ exports.setupCrowdsaleSuite = async function(setupParams, crowdsaleParams, _, wa
     const preIcoStrategy = await PreIcoStrategy.new(
         setupParams.pre_ico.bonus,
         setupParams.pre_ico.amount,
-        setupParams.pre_ico.rate
+        setupParams.pre_ico.rate,
     );
 
     const trancheStrategy = await TrancheStrategy.new(
@@ -48,7 +48,7 @@ exports.setupCrowdsaleSuite = async function(setupParams, crowdsaleParams, _, wa
         crowdsaleParams.start_time, crowdsaleParams.end_time,
         crowdsaleParams.rate, wallet, crowdsaleParams.cap,
         earlyContribStrategy.address, preIcoStrategy.address,
-        trancheStrategy.address, finalizableMowjow.address
+        trancheStrategy.address, finalizableMowjow.address, crowdsaleParams.cap_per_user
         , {from: _, gas: 47000000});
 
     const mowjowCrowdsaleAddress = mowjowCrowdsale.address;
@@ -80,7 +80,8 @@ exports.crowdsaleParams = {
     cap: this.ether(1),
     start_time: startTime,
     end_time: endTime,
-    after_end_time: afterEndTime
+    after_end_time: afterEndTime,
+    cap_per_user: 11400000000000000000
 };
 
 exports.crowdsaleParamsEnding = {

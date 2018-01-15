@@ -39,7 +39,7 @@ contract('MowjowCrowdsaleIco', function ([_, investor, wallet, purchaser]) {
             const event = logs.find(e => e.event === PURCHASE_EVENT);
             should.exist(event);
             event.args.amount.should.be.bignumber.equal(expectedValue);
-            await this.mowjowCrowdsale.addMowjowInvestors(investor, {from: _});
+            await this.mowjowCrowdsale.addMowjowInvestors(investor, true, {from: _});
             const log  = await this.mowjowCrowdsale.buyTokens(investor, { value: helper.ether(1), from: purchaser });
             const event1 = log.logs.find(e => e.event === PURCHASE_EVENT);
             should.exist(event1);
@@ -73,8 +73,8 @@ contract('MowjowCrowdsaleIco', function ([_, investor, wallet, purchaser]) {
             });
             const event = logs.find(e => e.event === PURCHASE_EVENT);
             should.exist(event);
-            await this.mowjowCrowdsale.addMowjowInvestors(investor, {from: _});
-            await this.mowjowCrowdsale.addMowjowInvestors(investor, {from: _})
+            await this.mowjowCrowdsale.addMowjowInvestors(investor, true, {from: _});
+            await this.mowjowCrowdsale.addMowjowInvestors(investor, true, {from: _})
                 .should.be.rejectedWith(helper.EVMRevert);
 
         });

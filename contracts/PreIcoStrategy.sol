@@ -3,7 +3,7 @@ pragma solidity ^0.4.11;
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./PricingStrategy.sol";
 
-contract  PreIcoStrategy is PricingStrategy {
+contract PreIcoStrategy is PricingStrategy {
     using SafeMath for uint256;
 
     uint256 public rate;

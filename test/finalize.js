@@ -30,7 +30,7 @@ contract('MowjowCrowdsaleFin', function ([_, investor, wallet, purchaser]) {
         it('should be ended if cap reached', async function () {
             const etherAmount = helper.ether(1);
             await this.mowjowCrowdsale.addWhitelistInvestors(investor, {from: _});
-            await this.mowjowCrowdsale.addMowjowInvestors(investor, {from: _});
+            await this.mowjowCrowdsale.addMowjowInvestors(investor, true, {from: _});
             await this.mowjowCrowdsale.buyTokens(investor, { value: etherAmount, from: purchaser });
             await this.mowjowCrowdsale.buyTokens(investor, { value: etherAmount, from: purchaser });
             await this.mowjowCrowdsale.buyTokens(investor, { value: etherAmount, from: purchaser });
@@ -42,7 +42,7 @@ contract('MowjowCrowdsaleFin', function ([_, investor, wallet, purchaser]) {
         it('should be finalized', async function () {
             const etherAmount = helper.ether(1);
             await this.mowjowCrowdsale.addWhitelistInvestors(investor, {from: _});
-            await this.mowjowCrowdsale.addMowjowInvestors(investor, {from: _});
+            await this.mowjowCrowdsale.addMowjowInvestors(investor, true, {from: _});
             await this.mowjowCrowdsale.buyTokens(investor, { value: etherAmount, from: purchaser });
             await this.mowjowCrowdsale.buyTokens(investor, { value: etherAmount, from: purchaser });
             await this.mowjowCrowdsale.buyTokens(investor, { value: etherAmount, from: purchaser });

@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "truffle test",
-    "test-net": "testrpc --network development -l 990000000000000 -u 0 -u 1 -u 2 -u 3",
+    "test-net": "testrpc --network rpc -l 990000000000000 -s someseed -u 0 -u 1 -u 2 -u 3 && npm run testrpc-migrate",
     "ropsten": "testrpc --network ropsten -l 990000000000000 -u 0 -u 1 -u 2 -u 3 --gas 5555555555",
     "remix": "remixd -S /home/developer/Documents/Bounty/tokensale/contracts",
     "mr": "truffle migrate --reset --network ropsten"
